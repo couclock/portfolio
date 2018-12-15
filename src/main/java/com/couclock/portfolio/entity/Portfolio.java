@@ -1,0 +1,59 @@
+package com.couclock.portfolio.entity;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
+
+import org.hibernate.annotations.NaturalId;
+
+import com.couclock.portfolio.entity.sub.PortfolioAddMoneyEvent;
+import com.couclock.portfolio.entity.sub.PortfolioBuyEvent;
+import com.couclock.portfolio.entity.sub.PortfolioEvent;
+import com.couclock.portfolio.entity.sub.PortfolioSellEvent;
+
+@Entity
+public class Portfolio {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	public long id;
+
+	@NaturalId
+	public String strategyCode;
+
+	public double startMoney;
+	public double endMoney;
+	public LocalDate startDate;
+	public LocalDate endDate;
+
+	public double cagr;
+
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+	@JoinColumn(name = "portfolio_id")
+	public List<PortfolioEvent> events = new ArrayList<>();
+
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+	@JoinColumn(name = "portfolio_id")
+	public List<PortfolioHistory> history = new ArrayList<>();
+
+	public void addAddMoneyEvent(LocalDate date, double amount) {
+		events.add(new PortfolioAddMoneyEvent(date, amount));
+	}
+
+	public void addBuyEvent(LocalDate date, long count, String stockCode) {
+		events.add(new PortfolioBuyEvent(date, count, stockCode));
+	}
+
+	public void addSellEvent(LocalDate date, long count, String stockCode) {
+		events.add(new PortfolioSellEvent(date, count, stockCode));
+	}
+
+}

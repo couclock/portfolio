@@ -56,7 +56,7 @@ public class PortfolioApplication {
 		stock.code = "USTY";
 		stockService.upsert(stock);
 
-		yahooService.updateStocksHistory();
+		// yahooService.updateStocksHistory();
 
 	}
 

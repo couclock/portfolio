@@ -2,26 +2,26 @@ package com.couclock.portfolio.rest;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.zip.DataFormatException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.couclock.portfolio.entity.FinStock;
 import com.couclock.portfolio.entity.StockHistory;
-import com.couclock.portfolio.service.QuandlService;
 import com.couclock.portfolio.service.StockHistoryService;
 import com.couclock.portfolio.service.StockService;
+import com.couclock.portfolio.service.YahooService;
 
 @RestController
 @RequestMapping("/stocks")
 public class StockController {
 
 	@Autowired
-	private QuandlService quandlService;
+	private YahooService yahooService;
 
 	@Autowired
 	private StockService stockService;
@@ -36,10 +36,11 @@ public class StockController {
 
 	}
 
-	@RequestMapping
-	public String hello() throws DataFormatException, IOException {
-		quandlService.updateEquityList();
-		return "Hello";
+	@RequestMapping("/{stockCode}/history")
+	public List<StockHistory> getOneHistory(@PathVariable(value = "stockCode") String stockCode) {
+
+		return stockHistoryService.getAllByStockCode(stockCode);
+
 	}
 
 	@RequestMapping("/query")
@@ -58,19 +59,19 @@ public class StockController {
 //		return finStock;
 	}
 
-	@RequestMapping("/{stockCode}/update")
+	@RequestMapping(method = RequestMethod.POST, value = "/{stockCode}/update")
 	public List<StockHistory> update(@PathVariable(value = "stockCode") String stockCode) throws IOException {
 
-		quandlService.updateOneStockHistory(stockCode);
+		yahooService.updateOneStockHistory(stockCode);
 
 		return stockHistoryService.getAllByStockCode(stockCode);
 
 	}
 
-	@RequestMapping("/update")
+	@RequestMapping(method = RequestMethod.POST, value = "/update")
 	public String updateAll() throws IOException {
 
-		quandlService.updateStocksHistory();
+		yahooService.updateStocksHistory();
 
 		return "Ok, done !";
 

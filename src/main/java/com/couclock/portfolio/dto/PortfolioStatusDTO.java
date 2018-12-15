@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class PortfolioDTO {
+public class PortfolioStatusDTO {
 
 	public static class MyStock {
 		public long count;
 		public String stockCode;
+
+		public MyStock() {
+		}
 
 		public MyStock(long count, String stockCode) {
 			this.count = count;
@@ -23,6 +26,7 @@ public class PortfolioDTO {
 	}
 
 	public double money = 0;
+
 	public List<MyStock> myStocks = new ArrayList<>();
 
 	public void addStock(long count, String stockCode) {
@@ -46,7 +50,15 @@ public class PortfolioDTO {
 
 	@Override
 	public String toString() {
-		return String.format("PortfolioDTO [money=%s, myStocks=%s]", money, myStocks);
+		return String.format("PortfolioStatusDTO [money=%s, myStocks=%s]", money, myStocks);
+	}
+
+	@Override
+	protected PortfolioStatusDTO clone() {
+		PortfolioStatusDTO pfStatus = new PortfolioStatusDTO();
+		pfStatus.money = this.money;
+		pfStatus.myStocks = new ArrayList<>(this.myStocks);
+		return pfStatus;
 	}
 
 }

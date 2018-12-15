@@ -11,8 +11,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.couclock.portfolio.dto.PortfolioDTO;
-import com.couclock.portfolio.dto.PortfolioDTO.MyStock;
+import com.couclock.portfolio.dto.PortfolioStatusDTO;
+import com.couclock.portfolio.dto.PortfolioStatusDTO.MyStock;
+import com.couclock.portfolio.entity.Portfolio;
 import com.couclock.portfolio.entity.StockHistory;
 
 /**
@@ -28,60 +29,65 @@ public class StrategyService {
 	@Autowired
 	private StockHistoryService stockHistoryService;
 
-	public void acceleratedDualMomentum() throws Exception {
+	public Portfolio acceleratedDualMomentum(String sp500StockCode, String exUSStockCode, String bondStockCode)
+			throws Exception {
 
-		LocalDate currentDate = LocalDate.parse("2010-01-01");
-		PortfolioDTO portfolio = new PortfolioDTO();
-		portfolio.money = 10000;
+		LocalDate currentDate = LocalDate.parse("2005-01-01");
+		PortfolioStatusDTO pfStatus = new PortfolioStatusDTO();
+		pfStatus.money = 10000;
 
-		Map<LocalDate, StockHistory> mmsH = stockHistoryService.getAllByStockCode_Map("MMS");
-		Map<LocalDate, StockHistory> c500H = stockHistoryService.getAllByStockCode_Map("500");
-		Map<LocalDate, StockHistory> ustyH = stockHistoryService.getAllByStockCode_Map("USTY");
+		Portfolio portfolio = new Portfolio();
+		portfolio.startDate = currentDate;
+		portfolio.startMoney = pfStatus.money;
+		portfolio.addAddMoneyEvent(currentDate, pfStatus.money);
+
+		Map<LocalDate, StockHistory> exUSH = stockHistoryService.getAllByStockCode_Map(exUSStockCode);
+		Map<LocalDate, StockHistory> sp500H = stockHistoryService.getAllByStockCode_Map(sp500StockCode);
+		Map<LocalDate, StockHistory> bondH = stockHistoryService.getAllByStockCode_Map(bondStockCode);
 		Map<String, Map<LocalDate, StockHistory>> stock2H = new HashMap<>();
-		stock2H.put("MMS", mmsH);
-		stock2H.put("500", c500H);
-		stock2H.put("USTY", ustyH);
+		stock2H.put(exUSStockCode, exUSH);
+		stock2H.put(sp500StockCode, sp500H);
+		stock2H.put(bondStockCode, bondH);
 
 		while (currentDate.isBefore(LocalDate.now())) {
-			double momentumMMS = getXMonthPerf(mmsH, currentDate.minusDays(1), 1)
-					+ getXMonthPerf(mmsH, currentDate.minusDays(1), 3)
-					+ getXMonthPerf(mmsH, currentDate.minusDays(1), 6);
-			double momentum500 = getXMonthPerf(c500H, currentDate.minusDays(1), 1)
-					+ getXMonthPerf(c500H, currentDate.minusDays(1), 3)
-					+ getXMonthPerf(c500H, currentDate.minusDays(1), 6);
+			double momentumExUS = getXMonthPerf(exUSH, currentDate.minusDays(1), 1)
+					+ getXMonthPerf(exUSH, currentDate.minusDays(1), 3)
+					+ getXMonthPerf(exUSH, currentDate.minusDays(1), 6);
+			double momentumSP500 = getXMonthPerf(sp500H, currentDate.minusDays(1), 1)
+					+ getXMonthPerf(sp500H, currentDate.minusDays(1), 3)
+					+ getXMonthPerf(sp500H, currentDate.minusDays(1), 6);
 
 			String targetStock = null;
 
-			if (momentum500 > momentumMMS) {
-				if (momentum500 > 0) {
-					targetStock = "500";
+			if (momentumSP500 > momentumExUS) {
+				if (momentumSP500 > 0) {
+					targetStock = sp500StockCode;
 				} else {
-					targetStock = "USTY";
+					targetStock = bondStockCode;
 				}
 			} else {
-				if (momentumMMS > 0) {
-					targetStock = "MMS";
+				if (momentumExUS > 0) {
+					targetStock = exUSStockCode;
 				} else {
-					targetStock = "USTY";
+					targetStock = bondStockCode;
 				}
 			}
 
 			log.warn("ToBuy/hold on " + currentDate + " : " + targetStock);
 
-			if (!portfolio.containStock(targetStock)) {
-
-				boolean buyToDo = true;
+			if (!pfStatus.containStock(targetStock)) {
 
 				final LocalDate curDate = currentDate;
-				List<MyStock> myStocks = new ArrayList<>(portfolio.myStocks);
+				List<MyStock> myStocks = new ArrayList<>(pfStatus.myStocks);
 				myStocks.forEach(oneStock -> {
 					StockHistory sh = findFirstHistoryAfter(stock2H.get(oneStock.stockCode), curDate,
 							curDate.plusMonths(1));
 					if (sh == null) {
 						log.warn("Cannot sell : " + oneStock);
 					} else {
-						portfolio.money += sh.open * oneStock.count;
-						portfolio.removeStock(oneStock.stockCode);
+						pfStatus.money += sh.open * oneStock.count;
+						pfStatus.removeStock(oneStock.stockCode);
+						portfolio.addSellEvent(curDate, oneStock.count, oneStock.stockCode);
 					}
 				});
 
@@ -89,37 +95,53 @@ public class StrategyService {
 						currentDate.plusMonths(1));
 
 				if (sh != null) {
-					long count = Math.round(Math.floor(portfolio.money / sh.open));
+					long count = Math.round(Math.floor(pfStatus.money / sh.open));
 					if (count > 0) {
-						portfolio.addStock(count, targetStock);
-						portfolio.money -= count * sh.open;
+						pfStatus.addStock(count, targetStock);
+						pfStatus.money -= count * sh.open;
+						portfolio.addBuyEvent(curDate, count, targetStock);
+
 					}
 				}
 			}
 
-			log.warn("Portfolio status : " + portfolio);
+			log.warn("Portfolio status : " + pfStatus);
 
 			currentDate = currentDate.plusMonths(1);
 		}
 
 		// get portfolio value with a sell all
-		final LocalDate curDate = currentDate;
+//		final LocalDate curDate = currentDate;
+//
+//		List<MyStock> myStocks = new ArrayList<>(currentPF.myStocks);
+//		myStocks.forEach(oneStock -> {
+//			StockHistory sh = findFirstHistoryBefore(stock2H.get(oneStock.stockCode), curDate, curDate.minusMonths(1));
+//			if (sh == null) {
+//				log.warn("Cannot sell : " + oneStock);
+//			} else {
+//				currentPF.money += sh.open * oneStock.count;
+//				currentPF.removeStock(oneStock.stockCode);
+//				pfHistory.addSellEvent(curDate, oneStock.count, oneStock.stockCode, currentPF);
+//
+//			}
+//		});
 
-		List<MyStock> myStocks = new ArrayList<>(portfolio.myStocks);
-		myStocks.forEach(oneStock -> {
-			StockHistory sh = findFirstHistoryBefore(stock2H.get(oneStock.stockCode), curDate, curDate.minusMonths(1));
-			if (sh == null) {
-				log.warn("Cannot sell : " + oneStock);
-			} else {
-				portfolio.money += sh.open * oneStock.count;
-				portfolio.removeStock(oneStock.stockCode);
-			}
-		});
+		log.warn("FINAL pfHistory : " + portfolio);
 
-		log.warn("FINAL Portfolio status : " + portfolio);
+		return portfolio;
 
 	}
 
+	/**
+	 * Find history in submitted map equal or after to afterDate and before
+	 * maxAfterDate<br/>
+	 * afterDate < maxAfterDate
+	 *
+	 * @param allHistories
+	 * @param beforeDate
+	 * @param maxBeforeDate
+	 * @return
+	 */
 	public StockHistory findFirstHistoryAfter(Map<LocalDate, StockHistory> allHistories, LocalDate afterDate,
 			LocalDate maxAfterDate) {
 		LocalDate current = LocalDate.from(afterDate);

@@ -56,8 +56,13 @@ public class StockHistoryService {
 	}
 
 	public Map<LocalDate, StockHistory> getAllByStockCode_Map(String stockCode) {
-		return stockHistoryRepository.findByStock_CodeOrderByDateDesc(stockCode).stream() //
-				.collect(Collectors.toMap(oneStockHistory -> oneStockHistory.date, Function.identity()));
+		try {
+			return stockHistoryRepository.findByStock_CodeOrderByDateDesc(stockCode).stream() //
+					.collect(Collectors.toMap(oneStockHistory -> oneStockHistory.date, Function.identity()));
+		} catch (Exception e) {
+			log.error("ERROR : ", e);
+		}
+		return null;
 	}
 
 	public StockHistory getLatestHistory(String stockCode) {

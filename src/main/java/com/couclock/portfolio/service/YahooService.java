@@ -1,7 +1,7 @@
 package com.couclock.portfolio.service;
 
 import java.io.IOException;
-import java.time.ZoneId;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -31,8 +31,6 @@ public class YahooService {
 
 	public void updateOneStockHistory(String stockCode) throws IOException {
 
-		long start = System.currentTimeMillis();
-
 		FinStock stock = stockService.getByCode(stockCode);
 
 		// Skip unknown stock
@@ -40,45 +38,54 @@ public class YahooService {
 			return;
 		}
 
-		StockHistory stockHistory = stockHistoryService.getLatestHistory(stockCode);
+		StockHistory lastStockHistory = stockHistoryService.getLatestHistory(stockCode);
 
 		Calendar fromDate = Calendar.getInstance();
 
-		if (stockHistory == null) {
+		if (lastStockHistory == null) {
 			fromDate.set(2000, 01, 01);
 		} else {
-			fromDate.setTime(Date.from(stockHistory.date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()));
+			Date fDate = java.sql.Date.valueOf(lastStockHistory.date.plusDays(1));
+			fromDate.setTime(fDate);
 		}
 
 		Stock stockData = YahooFinance.get(stockCode + ".PA", fromDate, Interval.DAILY);
 
 		List<StockHistory> toImport = new ArrayList<>();
-		stockData.getHistory().forEach(oneDay -> {
+		if (stockData.getHistory() != null) {
+			stockData.getHistory().forEach(oneDay -> {
 
-			if (oneDay.getDate() == null || oneDay.getOpen() == null || oneDay.getClose() == null
-					|| oneDay.getHigh() == null || oneDay.getLow() == null || oneDay.getVolume() == null) {
-				return;
-			}
+				// Skip incomplete data
+				if (oneDay.getDate() == null || oneDay.getOpen() == null || oneDay.getClose() == null
+						|| oneDay.getHigh() == null || oneDay.getLow() == null || oneDay.getVolume() == null) {
+					return;
+				}
 
-			StockHistory newStockHistory = new StockHistory();
-			newStockHistory.stock = stock;
-			newStockHistory.date = oneDay.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-			newStockHistory.open = oneDay.getOpen().doubleValue();
-			newStockHistory.high = oneDay.getHigh().doubleValue();
-			newStockHistory.low = oneDay.getLow().doubleValue();
-			newStockHistory.close = oneDay.getClose().doubleValue();
-			newStockHistory.volume = oneDay.getVolume().longValue();
+				LocalDate lDate = new java.sql.Date(oneDay.getDate().getTime().getTime()).toLocalDate();
 
-			toImport.add(newStockHistory);
+				// Skip last known history
+				if (lastStockHistory != null
+						&& (lDate.isEqual(lastStockHistory.date) || lDate.isBefore(lastStockHistory.date))) {
+					return;
+				}
 
-		});
+				StockHistory newStockHistory = new StockHistory();
+				newStockHistory.stock = stock;
+				newStockHistory.date = lDate;
+				newStockHistory.open = oneDay.getOpen().doubleValue();
+				newStockHistory.high = oneDay.getHigh().doubleValue();
+				newStockHistory.low = oneDay.getLow().doubleValue();
+				newStockHistory.close = oneDay.getClose().doubleValue();
+				newStockHistory.volume = oneDay.getVolume().longValue();
 
-		log.warn("Analized (" + (System.currentTimeMillis() - start) + ")");
-		start = System.currentTimeMillis();
+				toImport.add(newStockHistory);
+
+			});
+		}
+
+		log.warn("toImport count : " + toImport.size());
 
 		stockHistoryService.createBatch(toImport);
-
-		log.warn("Import ended (" + (System.currentTimeMillis() - start) + ")");
 
 	}
 
