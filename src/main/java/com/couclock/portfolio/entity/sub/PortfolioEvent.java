@@ -24,4 +24,8 @@ public abstract class PortfolioEvent {
 	public LocalDate date = null;
 	public EVENT_TYPE type = EVENT_TYPE.ADD_MONEY;
 
+	public LocalDate getDate() {
+		return date;
+	}
+
 }

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import com.couclock.portfolio.dto.PortfolioStatusDTO;
 import com.couclock.portfolio.dto.PortfolioStatusDTO.MyStock;
 import com.couclock.portfolio.entity.Portfolio;
+import com.couclock.portfolio.entity.PortfolioHistory;
 import com.couclock.portfolio.entity.StockHistory;
 
 /**
@@ -41,24 +42,23 @@ public class StrategyService {
 		portfolio.startMoney = pfStatus.money;
 		portfolio.addAddMoneyEvent(currentDate, pfStatus.money);
 
-		Map<LocalDate, StockHistory> exUSH = stockHistoryService.getAllByStockCode_Map(exUSStockCode);
-		Map<LocalDate, StockHistory> sp500H = stockHistoryService.getAllByStockCode_Map(sp500StockCode);
-		Map<LocalDate, StockHistory> bondH = stockHistoryService.getAllByStockCode_Map(bondStockCode);
 		Map<String, Map<LocalDate, StockHistory>> stock2H = new HashMap<>();
-		stock2H.put(exUSStockCode, exUSH);
-		stock2H.put(sp500StockCode, sp500H);
-		stock2H.put(bondStockCode, bondH);
+		stock2H.put(exUSStockCode, stockHistoryService.getAllByStockCode_Map(exUSStockCode));
+		stock2H.put(sp500StockCode, stockHistoryService.getAllByStockCode_Map(sp500StockCode));
+		stock2H.put(bondStockCode, stockHistoryService.getAllByStockCode_Map(bondStockCode));
 
 		while (currentDate.isBefore(LocalDate.now())) {
-			double momentumExUS = getXMonthPerf(exUSH, currentDate.minusDays(1), 1)
-					+ getXMonthPerf(exUSH, currentDate.minusDays(1), 3)
-					+ getXMonthPerf(exUSH, currentDate.minusDays(1), 6);
-			double momentumSP500 = getXMonthPerf(sp500H, currentDate.minusDays(1), 1)
-					+ getXMonthPerf(sp500H, currentDate.minusDays(1), 3)
-					+ getXMonthPerf(sp500H, currentDate.minusDays(1), 6);
 
+			// Get Momentum on exUS stock and on sp500 stock
+			double momentumExUS = getXMonthPerf(stock2H.get(exUSStockCode), currentDate.minusDays(1), 1)
+					+ getXMonthPerf(stock2H.get(exUSStockCode), currentDate.minusDays(1), 3)
+					+ getXMonthPerf(stock2H.get(exUSStockCode), currentDate.minusDays(1), 6);
+			double momentumSP500 = getXMonthPerf(stock2H.get(sp500StockCode), currentDate.minusDays(1), 1)
+					+ getXMonthPerf(stock2H.get(sp500StockCode), currentDate.minusDays(1), 3)
+					+ getXMonthPerf(stock2H.get(sp500StockCode), currentDate.minusDays(1), 6);
+
+			// Set targetStock
 			String targetStock = null;
-
 			if (momentumSP500 > momentumExUS) {
 				if (momentumSP500 > 0) {
 					targetStock = sp500StockCode;
@@ -72,8 +72,6 @@ public class StrategyService {
 					targetStock = bondStockCode;
 				}
 			}
-
-			log.warn("ToBuy/hold on " + currentDate + " : " + targetStock);
 
 			if (!pfStatus.containStock(targetStock)) {
 
@@ -105,26 +103,14 @@ public class StrategyService {
 				}
 			}
 
+			List<PortfolioHistory> partialH = getPartialHistory(currentDate, currentDate.plusMonths(1), pfStatus,
+					stock2H);
+			portfolio.history.addAll(partialH);
+
 			log.warn("Portfolio status : " + pfStatus);
 
 			currentDate = currentDate.plusMonths(1);
 		}
-
-		// get portfolio value with a sell all
-//		final LocalDate curDate = currentDate;
-//
-//		List<MyStock> myStocks = new ArrayList<>(currentPF.myStocks);
-//		myStocks.forEach(oneStock -> {
-//			StockHistory sh = findFirstHistoryBefore(stock2H.get(oneStock.stockCode), curDate, curDate.minusMonths(1));
-//			if (sh == null) {
-//				log.warn("Cannot sell : " + oneStock);
-//			} else {
-//				currentPF.money += sh.open * oneStock.count;
-//				currentPF.removeStock(oneStock.stockCode);
-//				pfHistory.addSellEvent(curDate, oneStock.count, oneStock.stockCode, currentPF);
-//
-//			}
-//		});
 
 		log.warn("FINAL pfHistory : " + portfolio);
 
@@ -200,6 +186,33 @@ public class StrategyService {
 		double perf = diff / startH.close;
 
 		return perf * 100;
+	}
+
+	private List<PortfolioHistory> getPartialHistory(LocalDate startDate, LocalDate endDate,
+			PortfolioStatusDTO pfStatus, Map<String, Map<LocalDate, StockHistory>> stock2h) {
+
+		List<PortfolioHistory> result = new ArrayList<>();
+		LocalDate curDate = LocalDate.from(startDate);
+		while (curDate.isBefore(endDate)) {
+
+			double dayValue = pfStatus.money;
+			boolean allFound = true;
+
+			for (MyStock oneStock : pfStatus.myStocks) {
+				if (stock2h.containsKey(oneStock.stockCode) && stock2h.get(oneStock.stockCode).containsKey(curDate)) {
+					dayValue += oneStock.count * stock2h.get(oneStock.stockCode).get(curDate).close;
+				} else {
+					allFound = false;
+				}
+			}
+			if (allFound) {
+				result.add(new PortfolioHistory(curDate, dayValue));
+			}
+
+			curDate = curDate.plusDays(1);
+		}
+
+		return result;
 	}
 
 }

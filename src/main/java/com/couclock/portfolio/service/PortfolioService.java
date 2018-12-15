@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.couclock.portfolio.entity.Portfolio;
 import com.couclock.portfolio.repository.PortfolioEventRepository;
+import com.couclock.portfolio.repository.PortfolioHistoryRepository;
 import com.couclock.portfolio.repository.PortfolioRepository;
 
 /**
@@ -27,10 +28,23 @@ public class PortfolioService {
 	@Autowired
 	private PortfolioEventRepository portfolioEventRepository;
 
+	@Autowired
+	private PortfolioHistoryRepository portfolioHistoryRepository;
+
 	public Portfolio getByStrategyCode(String strategyCode) {
 		return portfolioRepository.findByStrategyCodeIgnoreCase(strategyCode);
 	}
 
+	public double getCAGR(final Portfolio newPortfolio) {
+		return 0;
+	}
+
+	/**
+	 * Upsert a portfolio in database
+	 *
+	 * @param strategyCode
+	 * @param newPortfolio
+	 */
 	public void upsert(String strategyCode, Portfolio newPortfolio) {
 
 		Portfolio portfolio = portfolioRepository.findByStrategyCodeIgnoreCase(strategyCode);
@@ -43,13 +57,16 @@ public class PortfolioService {
 		portfolio.endDate = newPortfolio.endDate;
 		portfolio.endMoney = newPortfolio.endMoney;
 
-		// portfolio.events.forEach(oneEvent -> {
-//			portfolioEventRepository.delete(oneEvent);
-//		});
 		portfolio.events.clear();
 		portfolio.events.addAll(newPortfolio.events //
 				.stream() //
 				.map(oneEvent -> portfolioEventRepository.save(oneEvent)) //
+				.collect(Collectors.toList()));
+
+		portfolio.history.clear();
+		portfolio.history.addAll(newPortfolio.history //
+				.stream() //
+				.map(oneHistory -> portfolioHistoryRepository.save(oneHistory)) //
 				.collect(Collectors.toList()));
 
 		portfolioRepository.save(portfolio);

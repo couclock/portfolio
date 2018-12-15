@@ -17,4 +17,12 @@ public class PortfolioHistory {
 	public LocalDate date;
 
 	public double value;
+
+	public PortfolioHistory() {
+	}
+
+	public PortfolioHistory(LocalDate date, double value) {
+		this.date = date;
+		this.value = value;
+	}
 }

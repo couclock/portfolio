@@ -52,6 +52,10 @@ public class Portfolio {
 		events.add(new PortfolioBuyEvent(date, count, stockCode));
 	}
 
+	public void addHistory(LocalDate date, double value) {
+		history.add(new PortfolioHistory(date, value));
+	}
+
 	public void addSellEvent(LocalDate date, long count, String stockCode) {
 		events.add(new PortfolioSellEvent(date, count, stockCode));
 	}
