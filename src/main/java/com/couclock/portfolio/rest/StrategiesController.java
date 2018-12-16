@@ -26,6 +26,35 @@ public class StrategiesController {
 	@Autowired
 	private PortfolioService portfolioService;
 
+	@RequestMapping(method = RequestMethod.POST, value = "/{strategyCode}/{usStockCode}/{exUsStockCode}/{bondStockCode}")
+	public void addStrategy(@PathVariable(value = "strategyCode") String strategyCode,
+			@PathVariable(value = "usStockCode") String usStockCode,
+			@PathVariable(value = "exUsStockCode") String exUsStockCode,
+			@PathVariable(value = "bondStockCode") String bondStockCode) throws Exception {
+
+		Portfolio portfolio = portfolioService.getByStrategyCode(strategyCode);
+
+		if (portfolio != null) {
+			throw new Exception("that strategyCode already exists !");
+		} else {
+			portfolio = new Portfolio();
+			portfolio.strategyCode = strategyCode;
+			portfolio.startDate = LocalDate.parse("2005-01-01");
+			portfolio.startMoney = 10000;
+			portfolio.addAddMoneyEvent(portfolio.startDate, portfolio.startMoney);
+			portfolio.endStatus = new PortfolioStatus();
+			portfolio.endStatus.money = portfolio.startMoney;
+			portfolio.endDate = portfolio.startDate;
+			portfolio.usStockCode = usStockCode;
+			portfolio.exUsStockCode = exUsStockCode;
+			portfolio.bondStockCode = bondStockCode;
+
+			portfolioService.upsert(portfolio);
+
+		}
+
+	}
+
 	@RequestMapping(method = RequestMethod.DELETE, value = "/{strategyCode}")
 	public void deleteOne(@PathVariable(value = "strategyCode") String strategyCode) {
 
@@ -49,9 +78,7 @@ public class StrategiesController {
 
 	@RequestMapping("/{strategyCode}/history")
 	public List<PortfolioHistory> getHistory(@PathVariable(value = "strategyCode") String strategyCode) {
-
 		return portfolioService.getByStrategyCode(strategyCode).history;
-
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/{strategyCode}/process")
@@ -60,20 +87,34 @@ public class StrategiesController {
 		Portfolio portfolio = portfolioService.getByStrategyCode(strategyCode);
 
 		if (portfolio != null) {
-			portfolio = strategyService.acceleratedDualMomentum(portfolio, "500", "MMS", "USTY");
+			portfolio = strategyService.acceleratedDualMomentum(portfolio);
 		} else {
 			portfolio = new Portfolio();
-			portfolio.strategyCode = strategyCode;
-			portfolio.startDate = LocalDate.parse("2005-01-01");
-			portfolio.startMoney = 10000;
-			portfolio.addAddMoneyEvent(portfolio.startDate, portfolio.startMoney);
-			portfolio.endStatus = new PortfolioStatus();
-			portfolio.endStatus.money = portfolio.startMoney;
-			portfolio.endDate = portfolio.startDate;
 
-			portfolio = strategyService.acceleratedDualMomentum(portfolio, "500", "MMS", "USTY");
+			portfolio.strategyCode = strategyCode;
+
+			portfolio = portfolioService.initPortfolio(portfolio);
+
+			portfolio = strategyService.acceleratedDualMomentum(portfolio);
 
 		}
+
+		portfolioService.upsert(portfolio);
+
+		return portfolio;
+
+	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/{strategyCode}/reset")
+	public Portfolio resetStrategy(@PathVariable(value = "strategyCode") String strategyCode) throws Exception {
+
+		Portfolio portfolio = portfolioService.getByStrategyCode(strategyCode);
+
+		if (portfolio == null) {
+			throw new Exception("Invalid strategy code !");
+		}
+
+		portfolio = portfolioService.initPortfolio(portfolio);
 
 		portfolioService.upsert(portfolio);
 

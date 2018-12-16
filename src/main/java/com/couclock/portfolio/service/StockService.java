@@ -1,6 +1,7 @@
 package com.couclock.portfolio.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,9 @@ public class StockService {
 	}
 
 	public List<FinStock> getAll() {
-		return stockRepository.findAll();
+		return stockRepository.findAll().stream() //
+				.sorted((stock1, stock2) -> stock1.code.compareTo(stock2.code)) //
+				.collect(Collectors.toList());
 	}
 
 	public FinStock getByCode(String stockCode) {

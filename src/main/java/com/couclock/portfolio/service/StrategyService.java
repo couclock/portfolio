@@ -30,39 +30,42 @@ public class StrategyService {
 	@Autowired
 	private StockHistoryService stockHistoryService;
 
-	public Portfolio acceleratedDualMomentum(Portfolio pf, String sp500StockCode, String exUSStockCode,
-			String bondStockCode) throws Exception {
+	public Portfolio acceleratedDualMomentum(Portfolio pf) throws Exception {
 
 		LocalDate currentDate = LocalDate.from(pf.endDate);
 		LocalDate targetDate = LocalDate.now();
 		PortfolioStatus pfStatus = pf.endStatus;
 
+		String usStockCode = pf.usStockCode;
+		String exUsStockCode = pf.exUsStockCode;
+		String bondStockCode = pf.bondStockCode;
+
 		Map<String, Map<LocalDate, StockHistory>> stock2H = new HashMap<>();
-		stock2H.put(exUSStockCode, stockHistoryService.getAllByStockCode_Map(exUSStockCode));
-		stock2H.put(sp500StockCode, stockHistoryService.getAllByStockCode_Map(sp500StockCode));
+		stock2H.put(exUsStockCode, stockHistoryService.getAllByStockCode_Map(exUsStockCode));
+		stock2H.put(usStockCode, stockHistoryService.getAllByStockCode_Map(usStockCode));
 		stock2H.put(bondStockCode, stockHistoryService.getAllByStockCode_Map(bondStockCode));
 
 		while (currentDate.isBefore(targetDate)) {
 
 			// Get Momentum on exUS stock and on sp500 stock
-			double momentumExUS = getXMonthPerf(stock2H.get(exUSStockCode), currentDate.minusDays(1), 1)
-					+ getXMonthPerf(stock2H.get(exUSStockCode), currentDate.minusDays(1), 3)
-					+ getXMonthPerf(stock2H.get(exUSStockCode), currentDate.minusDays(1), 6);
-			double momentumSP500 = getXMonthPerf(stock2H.get(sp500StockCode), currentDate.minusDays(1), 1)
-					+ getXMonthPerf(stock2H.get(sp500StockCode), currentDate.minusDays(1), 3)
-					+ getXMonthPerf(stock2H.get(sp500StockCode), currentDate.minusDays(1), 6);
+			double momentumExUS = getXMonthPerf(stock2H.get(exUsStockCode), currentDate.minusDays(1), 1)
+					+ getXMonthPerf(stock2H.get(exUsStockCode), currentDate.minusDays(1), 3)
+					+ getXMonthPerf(stock2H.get(exUsStockCode), currentDate.minusDays(1), 6);
+			double momentumSP500 = getXMonthPerf(stock2H.get(usStockCode), currentDate.minusDays(1), 1)
+					+ getXMonthPerf(stock2H.get(usStockCode), currentDate.minusDays(1), 3)
+					+ getXMonthPerf(stock2H.get(usStockCode), currentDate.minusDays(1), 6);
 
 			// Set targetStock
 			String targetStock = null;
 			if (momentumSP500 > momentumExUS) {
 				if (momentumSP500 > 0) {
-					targetStock = sp500StockCode;
+					targetStock = usStockCode;
 				} else {
 					targetStock = bondStockCode;
 				}
 			} else {
 				if (momentumExUS > 0) {
-					targetStock = exUSStockCode;
+					targetStock = exUsStockCode;
 				} else {
 					targetStock = bondStockCode;
 				}

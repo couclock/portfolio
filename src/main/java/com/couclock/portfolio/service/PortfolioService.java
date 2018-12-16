@@ -1,5 +1,6 @@
 package com.couclock.portfolio.service;
 
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.couclock.portfolio.entity.Portfolio;
 import com.couclock.portfolio.entity.PortfolioHistory;
+import com.couclock.portfolio.entity.PortfolioStatus;
 import com.couclock.portfolio.repository.PortfolioEventRepository;
 import com.couclock.portfolio.repository.PortfolioHistoryRepository;
 import com.couclock.portfolio.repository.PortfolioRepository;
@@ -84,6 +86,21 @@ public class PortfolioService {
 		}
 		double ulcerIndex = Math.sqrt(sumSq / portfolio.history.size());
 		return ulcerIndex;
+
+	}
+
+	public Portfolio initPortfolio(Portfolio portfolio) {
+		portfolio.startDate = LocalDate.parse("2010-01-01");
+		portfolio.startMoney = 10000;
+		portfolio.events.clear();
+		portfolio.history.clear();
+
+		portfolio.addAddMoneyEvent(portfolio.startDate, portfolio.startMoney);
+		portfolio.endStatus = new PortfolioStatus();
+		portfolio.endStatus.money = portfolio.startMoney;
+		portfolio.endDate = portfolio.startDate;
+
+		return portfolio;
 
 	}
 

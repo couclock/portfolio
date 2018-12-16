@@ -33,14 +33,16 @@ public class Portfolio {
 
 	public double startMoney;
 	public LocalDate startDate;
-
 	public LocalDate endDate;
-
 	@Embedded
 	public PortfolioStatus endStatus;
 
 	public double cagr;
 	public double ulcerIndex;
+
+	public String usStockCode;
+	public String exUsStockCode;
+	public String bondStockCode;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "portfolio_id")

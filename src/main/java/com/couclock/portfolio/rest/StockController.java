@@ -31,6 +31,13 @@ public class StockController {
 	@Autowired
 	private StockHistoryService stockHistoryService;
 
+	@RequestMapping("/")
+	public List<FinStock> getAll() {
+
+		return stockService.getAll();
+
+	}
+
 	@RequestMapping("/{stockCode}")
 	public FinStock getOne(@PathVariable(value = "stockCode") String stockCode) {
 
