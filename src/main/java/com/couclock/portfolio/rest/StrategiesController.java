@@ -27,22 +27,28 @@ public class StrategiesController {
 	private PortfolioService portfolioService;
 
 	@RequestMapping(method = RequestMethod.DELETE, value = "/{strategyCode}")
-	public void deleteOne(@PathVariable(value = "strategyCode") String strategyCode) throws Exception {
+	public void deleteOne(@PathVariable(value = "strategyCode") String strategyCode) {
 
 		portfolioService.deleteByStrategyCode(strategyCode);
 
 	}
 
 	@RequestMapping("/{strategyCode}")
-	public Portfolio get(@PathVariable(value = "strategyCode") String strategyCode) throws Exception {
+	public Portfolio get(@PathVariable(value = "strategyCode") String strategyCode) {
 
 		return portfolioService.getByStrategyCode(strategyCode);
 
 	}
 
+	@RequestMapping("/")
+	public List<Portfolio> getAll() {
+
+		return portfolioService.getAll();
+
+	}
+
 	@RequestMapping("/{strategyCode}/history")
-	public List<PortfolioHistory> getHistory(@PathVariable(value = "strategyCode") String strategyCode)
-			throws Exception {
+	public List<PortfolioHistory> getHistory(@PathVariable(value = "strategyCode") String strategyCode) {
 
 		return portfolioService.getByStrategyCode(strategyCode).history;
 

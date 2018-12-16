@@ -41,6 +41,10 @@ public class PortfolioService {
 		}
 	}
 
+	public List<Portfolio> getAll() {
+		return portfolioRepository.findAll();
+	}
+
 	public Portfolio getByStrategyCode(String strategyCode) {
 		return portfolioRepository.findByStrategyCodeIgnoreCase(strategyCode);
 	}
@@ -67,6 +71,22 @@ public class PortfolioService {
 		return cagr;
 	}
 
+	public double getUlcerIndex(final Portfolio portfolio) {
+
+		double sumSq = 0;
+		double maxValue = 0;
+		for (PortfolioHistory oneHistory : portfolio.history) {
+			if (oneHistory.value > maxValue) {
+				maxValue = oneHistory.value;
+			} else {
+				sumSq = sumSq + Math.pow(100 * ((oneHistory.value / maxValue) - 1), 2);
+			}
+		}
+		double ulcerIndex = Math.sqrt(sumSq / portfolio.history.size());
+		return ulcerIndex;
+
+	}
+
 	/**
 	 * Upsert a portfolio in database
 	 *
@@ -76,6 +96,7 @@ public class PortfolioService {
 	public void upsert(Portfolio portfolio) {
 
 		portfolio.cagr = getCAGR(portfolio);
+		portfolio.ulcerIndex = getUlcerIndex(portfolio);
 
 		portfolioRepository.save(portfolio);
 

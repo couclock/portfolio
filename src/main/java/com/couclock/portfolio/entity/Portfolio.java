@@ -19,6 +19,7 @@ import com.couclock.portfolio.entity.sub.PortfolioAddMoneyEvent;
 import com.couclock.portfolio.entity.sub.PortfolioBuyEvent;
 import com.couclock.portfolio.entity.sub.PortfolioEvent;
 import com.couclock.portfolio.entity.sub.PortfolioSellEvent;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 public class Portfolio {
@@ -39,13 +40,16 @@ public class Portfolio {
 	public PortfolioStatus endStatus;
 
 	public double cagr;
+	public double ulcerIndex;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "portfolio_id")
+	@JsonIgnore
 	public List<PortfolioEvent> events = new ArrayList<>();
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "portfolio_id")
+	@JsonIgnore
 	public List<PortfolioHistory> history = new ArrayList<>();
 
 	public void addAddMoneyEvent(LocalDate date, double amount) {

@@ -54,6 +54,10 @@ public class PortfolioApplication {
 		stock.code = "USTY";
 		stockService.upsert(stock);
 
+		stock = new FinStock();
+		stock.code = "C6E";
+		stockService.upsert(stock);
+
 	}
 
 }
