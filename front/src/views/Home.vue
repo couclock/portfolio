@@ -38,6 +38,11 @@
           <div class="md-layout">
             UlcerIndex : {{ currentStrategy.ulcerIndex | formatNb }} %
           </div>
+          <div class="md-layout"
+               v-for="(stat, stock, index) in currentStrategy.statistics"
+               :key="index">
+            {{ stock }} : {{ 100 * stat.performance | formatNb }} % ({{ stat.dayCount }} days)
+          </div>
           <div class="md-layout">
             <md-button class="md-layout-item md-raised md-primary"
                        @click="processStrategy">Process</md-button>
@@ -223,6 +228,9 @@ export default {
               keys: {
                 x: "date",
                 value: ["value"]
+              },
+              names: {
+                value: "Encours"
               }
             },
             axis: {
@@ -239,6 +247,20 @@ export default {
             },
             point: {
               show: false
+            },
+            legend: {
+              show: false
+            },
+            tooltip: {
+              format: {
+                title: function(d) {
+                  return d.toLocaleDateString();
+                },
+                value: function(value, ratio, id) {
+                  return Math.round(value * 100) / 100 + " €";
+                }
+                //            value: d3.format(',') // apply this format to both y and y2
+              }
             }
           };
           this.handler.$emit("init", options);

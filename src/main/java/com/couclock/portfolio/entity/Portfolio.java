@@ -3,8 +3,10 @@ package com.couclock.portfolio.entity;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.CascadeType;
+import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -36,6 +38,9 @@ public class Portfolio {
 	public LocalDate endDate;
 	@Embedded
 	public PortfolioStatus endStatus;
+
+	@ElementCollection
+	public Map<String, PortfolioStatistic> statistics;
 
 	public double cagr;
 	public double ulcerIndex;

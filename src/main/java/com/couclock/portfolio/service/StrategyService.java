@@ -76,8 +76,8 @@ public class StrategyService {
 				final LocalDate curDate = currentDate;
 				List<MyStock> myStocks = new ArrayList<>(pfStatus.myStocks);
 				myStocks.forEach(oneStock -> {
-					StockHistory sh = findFirstHistoryAfter(stock2H.get(oneStock.stockCode), curDate,
-							curDate.plusMonths(1));
+					StockHistory sh = stockHistoryService.findFirstHistoryAfter(stock2H.get(oneStock.stockCode),
+							curDate, curDate.plusMonths(1));
 					if (sh == null) {
 						log.warn("Cannot sell : " + oneStock);
 					} else {
@@ -87,7 +87,7 @@ public class StrategyService {
 					}
 				});
 
-				StockHistory sh = findFirstHistoryAfter(stock2H.get(targetStock), currentDate,
+				StockHistory sh = stockHistoryService.findFirstHistoryAfter(stock2H.get(targetStock), currentDate,
 						currentDate.plusMonths(1));
 
 				if (sh != null) {
@@ -119,50 +119,6 @@ public class StrategyService {
 	}
 
 	/**
-	 * Find history in submitted map equal or after to afterDate and before
-	 * maxAfterDate<br/>
-	 * afterDate < maxAfterDate
-	 *
-	 * @param allHistories
-	 * @param beforeDate
-	 * @param maxBeforeDate
-	 * @return
-	 */
-	public StockHistory findFirstHistoryAfter(Map<LocalDate, StockHistory> allHistories, LocalDate afterDate,
-			LocalDate maxAfterDate) {
-		LocalDate current = LocalDate.from(afterDate);
-		while (current.isBefore(maxAfterDate)) {
-			if (allHistories.containsKey(current)) {
-				return allHistories.get(current);
-			}
-			current = current.plusDays(1);
-		}
-		return null;
-	}
-
-	/**
-	 * Find history in submitted map equal or before to beforeDate and after
-	 * maxBeforeDate<br/>
-	 * beforeDate > maxBeforeDate
-	 *
-	 * @param allHistories
-	 * @param beforeDate
-	 * @param maxBeforeDate
-	 * @return
-	 */
-	public StockHistory findFirstHistoryBefore(Map<LocalDate, StockHistory> allHistories, LocalDate beforeDate,
-			LocalDate maxBeforeDate) {
-		LocalDate current = LocalDate.from(beforeDate);
-		while (current.isAfter(maxBeforeDate)) {
-			if (allHistories.containsKey(current)) {
-				return allHistories.get(current);
-			}
-			current = current.minusDays(1);
-		}
-		return null;
-	}
-
-	/**
 	 * Get Perf for last monthCount months using date as start date
 	 *
 	 * @param allHistories
@@ -175,8 +131,9 @@ public class StrategyService {
 			throws Exception {
 
 		LocalDate beginDate = date.minusMonths(monthCount);
-		StockHistory endH = findFirstHistoryBefore(allHistories, date, beginDate);
-		StockHistory startH = findFirstHistoryBefore(allHistories, beginDate, beginDate.minusMonths(monthCount));
+		StockHistory endH = stockHistoryService.findFirstHistoryBefore(allHistories, date, beginDate);
+		StockHistory startH = stockHistoryService.findFirstHistoryBefore(allHistories, beginDate,
+				beginDate.minusMonths(monthCount));
 
 		if (endH == null || startH == null) {
 			return -10000;

@@ -51,6 +51,50 @@ public class StockHistoryService {
 		}
 	}
 
+	/**
+	 * Find history in submitted map equal or after to afterDate and before
+	 * maxAfterDate<br/>
+	 * afterDate < maxAfterDate
+	 *
+	 * @param allHistories
+	 * @param beforeDate
+	 * @param maxBeforeDate
+	 * @return
+	 */
+	public StockHistory findFirstHistoryAfter(Map<LocalDate, StockHistory> allHistories, LocalDate afterDate,
+			LocalDate maxAfterDate) {
+		LocalDate current = LocalDate.from(afterDate);
+		while (current.isBefore(maxAfterDate)) {
+			if (allHistories.containsKey(current)) {
+				return allHistories.get(current);
+			}
+			current = current.plusDays(1);
+		}
+		return null;
+	}
+
+	/**
+	 * Find history in submitted map equal or before to beforeDate and after
+	 * maxBeforeDate<br/>
+	 * beforeDate > maxBeforeDate
+	 *
+	 * @param allHistories
+	 * @param beforeDate
+	 * @param maxBeforeDate
+	 * @return
+	 */
+	public StockHistory findFirstHistoryBefore(Map<LocalDate, StockHistory> allHistories, LocalDate beforeDate,
+			LocalDate maxBeforeDate) {
+		LocalDate current = LocalDate.from(beforeDate);
+		while (current.isAfter(maxBeforeDate)) {
+			if (allHistories.containsKey(current)) {
+				return allHistories.get(current);
+			}
+			current = current.minusDays(1);
+		}
+		return null;
+	}
+
 	public List<StockHistory> getAllByStockCode(String stockCode) {
 		return stockHistoryRepository.findByStock_CodeOrderByDateDesc(stockCode);
 	}

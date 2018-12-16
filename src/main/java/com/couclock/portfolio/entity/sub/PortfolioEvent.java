@@ -14,7 +14,7 @@ import javax.persistence.InheritanceType;
 public abstract class PortfolioEvent {
 
 	public static enum EVENT_TYPE {
-		BUY, SELL, ADD_MONEY
+		SELL, BUY, ADD_MONEY
 	}
 
 	@Id
