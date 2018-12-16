@@ -1,20 +1,24 @@
 package com.couclock.portfolio.rest;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.couclock.portfolio.entity.Portfolio;
+import com.couclock.portfolio.entity.PortfolioHistory;
 import com.couclock.portfolio.entity.PortfolioStatus;
 import com.couclock.portfolio.service.PortfolioService;
 import com.couclock.portfolio.service.StrategyService;
 
 @RestController
 @RequestMapping("/strategies")
+@CrossOrigin(origins = "*")
 public class StrategiesController {
 
 	@Autowired
@@ -33,6 +37,14 @@ public class StrategiesController {
 	public Portfolio get(@PathVariable(value = "strategyCode") String strategyCode) throws Exception {
 
 		return portfolioService.getByStrategyCode(strategyCode);
+
+	}
+
+	@RequestMapping("/{strategyCode}/history")
+	public List<PortfolioHistory> getHistory(@PathVariable(value = "strategyCode") String strategyCode)
+			throws Exception {
+
+		return portfolioService.getByStrategyCode(strategyCode).history;
 
 	}
 

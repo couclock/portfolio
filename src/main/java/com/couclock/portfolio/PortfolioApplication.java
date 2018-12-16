@@ -1,6 +1,7 @@
 package com.couclock.portfolio;
 
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,18 +12,15 @@ import org.springframework.context.annotation.Bean;
 
 import com.couclock.portfolio.entity.FinStock;
 import com.couclock.portfolio.service.StockService;
-import com.couclock.portfolio.service.YahooService;
 
 @SpringBootApplication
 public class PortfolioApplication {
 
 	private static final Logger log = LoggerFactory.getLogger(PortfolioApplication.class);
+	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 	@Autowired
 	private StockService stockService;
-
-	@Autowired
-	private YahooService yahooService;
 
 	public static void main(String[] args) {
 
@@ -55,8 +53,6 @@ public class PortfolioApplication {
 		stock = new FinStock();
 		stock.code = "USTY";
 		stockService.upsert(stock);
-
-		// yahooService.updateStocksHistory();
 
 	}
 

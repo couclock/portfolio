@@ -1,12 +1,20 @@
-import Vue from 'vue'
-import App from './App.vue'
-import router from './router'
-import store from './store'
+import Vue from 'vue';
+import App from './App.vue';
+import router from './router';
+import store from './store';
 
-Vue.config.productionTip = false
+import VueMaterial from 'vue-material';
+import 'vue-material/dist/vue-material.min.css';
+
+import VueC3 from 'vue-c3';
+import 'c3/c3.min.css';
+
+Vue.use(VueMaterial);
+
+Vue.config.productionTip = false;
 
 new Vue({
   router,
   store,
   render: h => h(App)
-}).$mount('#app')
+}).$mount('#app');
