@@ -19,7 +19,7 @@ public abstract class PortfolioEvent {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	public long id;
+	public Long id;
 
 	public LocalDate date = null;
 	public EVENT_TYPE type = EVENT_TYPE.ADD_MONEY;

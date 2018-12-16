@@ -11,10 +11,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.couclock.portfolio.dto.PortfolioStatusDTO;
-import com.couclock.portfolio.dto.PortfolioStatusDTO.MyStock;
 import com.couclock.portfolio.entity.Portfolio;
 import com.couclock.portfolio.entity.PortfolioHistory;
+import com.couclock.portfolio.entity.PortfolioStatus;
+import com.couclock.portfolio.entity.PortfolioStatus.MyStock;
 import com.couclock.portfolio.entity.StockHistory;
 
 /**
@@ -30,24 +30,19 @@ public class StrategyService {
 	@Autowired
 	private StockHistoryService stockHistoryService;
 
-	public Portfolio acceleratedDualMomentum(String sp500StockCode, String exUSStockCode, String bondStockCode)
-			throws Exception {
+	public Portfolio acceleratedDualMomentum(Portfolio pf, String sp500StockCode, String exUSStockCode,
+			String bondStockCode) throws Exception {
 
-		LocalDate currentDate = LocalDate.parse("2005-01-01");
-		PortfolioStatusDTO pfStatus = new PortfolioStatusDTO();
-		pfStatus.money = 10000;
-
-		Portfolio portfolio = new Portfolio();
-		portfolio.startDate = currentDate;
-		portfolio.startMoney = pfStatus.money;
-		portfolio.addAddMoneyEvent(currentDate, pfStatus.money);
+		LocalDate currentDate = LocalDate.from(pf.endDate);
+		LocalDate targetDate = LocalDate.now();
+		PortfolioStatus pfStatus = pf.endStatus;
 
 		Map<String, Map<LocalDate, StockHistory>> stock2H = new HashMap<>();
 		stock2H.put(exUSStockCode, stockHistoryService.getAllByStockCode_Map(exUSStockCode));
 		stock2H.put(sp500StockCode, stockHistoryService.getAllByStockCode_Map(sp500StockCode));
 		stock2H.put(bondStockCode, stockHistoryService.getAllByStockCode_Map(bondStockCode));
 
-		while (currentDate.isBefore(LocalDate.now())) {
+		while (currentDate.isBefore(targetDate)) {
 
 			// Get Momentum on exUS stock and on sp500 stock
 			double momentumExUS = getXMonthPerf(stock2H.get(exUSStockCode), currentDate.minusDays(1), 1)
@@ -85,7 +80,7 @@ public class StrategyService {
 					} else {
 						pfStatus.money += sh.open * oneStock.count;
 						pfStatus.removeStock(oneStock.stockCode);
-						portfolio.addSellEvent(curDate, oneStock.count, oneStock.stockCode);
+						pf.addSellEvent(curDate, oneStock.count, oneStock.stockCode);
 					}
 				});
 
@@ -97,7 +92,7 @@ public class StrategyService {
 					if (count > 0) {
 						pfStatus.addStock(count, targetStock);
 						pfStatus.money -= count * sh.open;
-						portfolio.addBuyEvent(curDate, count, targetStock);
+						pf.addBuyEvent(curDate, count, targetStock);
 
 					}
 				}
@@ -105,16 +100,18 @@ public class StrategyService {
 
 			List<PortfolioHistory> partialH = getPartialHistory(currentDate, currentDate.plusMonths(1), pfStatus,
 					stock2H);
-			portfolio.history.addAll(partialH);
+			pf.history.addAll(partialH);
 
 			log.warn("Portfolio status : " + pfStatus);
 
 			currentDate = currentDate.plusMonths(1);
 		}
 
-		log.warn("FINAL pfHistory : " + portfolio);
+		pf.endDate = targetDate;
+		pf.endStatus = pfStatus;
+		log.warn("FINAL pf : " + pf);
 
-		return portfolio;
+		return pf;
 
 	}
 
@@ -188,8 +185,8 @@ public class StrategyService {
 		return perf * 100;
 	}
 
-	private List<PortfolioHistory> getPartialHistory(LocalDate startDate, LocalDate endDate,
-			PortfolioStatusDTO pfStatus, Map<String, Map<LocalDate, StockHistory>> stock2h) {
+	private List<PortfolioHistory> getPartialHistory(LocalDate startDate, LocalDate endDate, PortfolioStatus pfStatus,
+			Map<String, Map<LocalDate, StockHistory>> stock2h) {
 
 		List<PortfolioHistory> result = new ArrayList<>();
 		LocalDate curDate = LocalDate.from(startDate);

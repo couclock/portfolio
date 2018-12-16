@@ -12,7 +12,7 @@ public class PortfolioHistory {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	public long id;
+	public Long id;
 
 	public LocalDate date;
 

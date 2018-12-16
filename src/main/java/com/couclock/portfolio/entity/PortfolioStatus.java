@@ -1,14 +1,20 @@
-package com.couclock.portfolio.dto;
+package com.couclock.portfolio.entity;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class PortfolioStatusDTO {
+import javax.persistence.ElementCollection;
+import javax.persistence.Embeddable;
 
+@Embeddable
+public class PortfolioStatus {
+
+	@Embeddable
 	public static class MyStock {
-		public long count;
-		public String stockCode;
+
+		public long count = 0;
+		public String stockCode = null;
 
 		public MyStock() {
 		}
@@ -27,6 +33,7 @@ public class PortfolioStatusDTO {
 
 	public double money = 0;
 
+	@ElementCollection
 	public List<MyStock> myStocks = new ArrayList<>();
 
 	public void addStock(long count, String stockCode) {
@@ -50,12 +57,12 @@ public class PortfolioStatusDTO {
 
 	@Override
 	public String toString() {
-		return String.format("PortfolioStatusDTO [money=%s, myStocks=%s]", money, myStocks);
+		return String.format("PortfolioStatus [money=%s, myStocks=%s]", money, myStocks);
 	}
 
 	@Override
-	protected PortfolioStatusDTO clone() {
-		PortfolioStatusDTO pfStatus = new PortfolioStatusDTO();
+	protected PortfolioStatus clone() {
+		PortfolioStatus pfStatus = new PortfolioStatus();
 		pfStatus.money = this.money;
 		pfStatus.myStocks = new ArrayList<>(this.myStocks);
 		return pfStatus;

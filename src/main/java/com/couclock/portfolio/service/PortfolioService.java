@@ -1,5 +1,7 @@
 package com.couclock.portfolio.service;
 
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -8,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.couclock.portfolio.entity.Portfolio;
+import com.couclock.portfolio.entity.PortfolioHistory;
 import com.couclock.portfolio.repository.PortfolioEventRepository;
 import com.couclock.portfolio.repository.PortfolioHistoryRepository;
 import com.couclock.portfolio.repository.PortfolioRepository;
@@ -31,43 +34,48 @@ public class PortfolioService {
 	@Autowired
 	private PortfolioHistoryRepository portfolioHistoryRepository;
 
+	public void deleteByStrategyCode(String strategyCode) {
+		Portfolio pf = portfolioRepository.findByStrategyCodeIgnoreCase(strategyCode);
+		if (pf != null) {
+			portfolioRepository.delete(pf);
+		}
+	}
+
 	public Portfolio getByStrategyCode(String strategyCode) {
 		return portfolioRepository.findByStrategyCodeIgnoreCase(strategyCode);
 	}
 
-	public double getCAGR(final Portfolio newPortfolio) {
-		return 0;
+	public double getCAGR(final Portfolio portfolio) {
+
+		List<PortfolioHistory> orderedPFHistory = portfolio.history.stream() //
+				.sorted((h1, h2) -> h1.date.compareTo(h2.date))//
+				.collect(Collectors.toList());
+
+		double cagr = 0;
+
+		if (orderedPFHistory.size() > 1) {
+			PortfolioHistory first = orderedPFHistory.get(0);
+			PortfolioHistory last = orderedPFHistory.get(orderedPFHistory.size() - 1);
+			cagr = last.value / first.value;
+			double years = ChronoUnit.DAYS.between(first.date, last.date) * 1.0;
+			years = years / 365.0;
+			years = 1 / years;
+
+			cagr = Math.pow(cagr, years) - 1;
+		}
+
+		return cagr;
 	}
 
 	/**
 	 * Upsert a portfolio in database
 	 *
 	 * @param strategyCode
-	 * @param newPortfolio
+	 * @param portfolio
 	 */
-	public void upsert(String strategyCode, Portfolio newPortfolio) {
+	public void upsert(Portfolio portfolio) {
 
-		Portfolio portfolio = portfolioRepository.findByStrategyCodeIgnoreCase(strategyCode);
-		if (portfolio == null) {
-			portfolio = new Portfolio();
-			portfolio.strategyCode = strategyCode;
-		}
-		portfolio.startDate = newPortfolio.startDate;
-		portfolio.startMoney = newPortfolio.startMoney;
-		portfolio.endDate = newPortfolio.endDate;
-		portfolio.endMoney = newPortfolio.endMoney;
-
-		portfolio.events.clear();
-		portfolio.events.addAll(newPortfolio.events //
-				.stream() //
-				.map(oneEvent -> portfolioEventRepository.save(oneEvent)) //
-				.collect(Collectors.toList()));
-
-		portfolio.history.clear();
-		portfolio.history.addAll(newPortfolio.history //
-				.stream() //
-				.map(oneHistory -> portfolioHistoryRepository.save(oneHistory)) //
-				.collect(Collectors.toList()));
+		portfolio.cagr = getCAGR(portfolio);
 
 		portfolioRepository.save(portfolio);
 
