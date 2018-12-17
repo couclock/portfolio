@@ -52,6 +52,13 @@ public class StockController {
 
 	}
 
+	@RequestMapping("/{stockCode}/history/last")
+	public StockHistory getOneLastHistory(@PathVariable(value = "stockCode") String stockCode) {
+
+		return stockHistoryService.getLatestHistory(stockCode);
+
+	}
+
 	@RequestMapping("/query")
 	public List<FinStock> query(@RequestParam(value = "q") String q) throws IOException {
 

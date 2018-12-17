@@ -1,5 +1,17 @@
 <template>
   <div id="app">
+    <md-toolbar class="md-primary"
+                md-elevation="1">
+      <h3 class="md-title"
+          style="flex: 1">Portfolio management</h3>
+      <router-link to="/">
+        <md-button>Portfolios</md-button>
+      </router-link>
+      <router-link to="/stocks">
+        <md-button>Stocks</md-button>
+      </router-link>
+    </md-toolbar>
+
     <router-view />
   </div>
 </template>
