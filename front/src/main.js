@@ -5,7 +5,7 @@ import store from './store';
 
 import VueMaterial from 'vue-material';
 import 'vue-material/dist/vue-material.min.css';
-import 'vue-material/dist/theme/default.css'; // This line here
+import 'vue-material/dist/theme/default.css';
 
 import VueC3 from 'vue-c3';
 import 'c3/c3.min.css';

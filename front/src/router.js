@@ -2,6 +2,8 @@ import Vue from 'vue';
 import Router from 'vue-router';
 import Home from './views/Home.vue';
 import Stocks from '@/views/Stocks.vue';
+import Portfolios from '@/views/Portfolios.vue';
+import PortfolioDetail from '@/views/PortfolioDetail.vue';
 
 Vue.use(Router);
 
@@ -16,6 +18,16 @@ export default new Router({
       path: '/stocks',
       name: 'stocks',
       component: Stocks
+    },
+    {
+      path: '/portfolios',
+      name: 'portfolios',
+      component: Portfolios
+    },
+    {
+      path: '/portfolios/:strategyCode',
+      name: 'portfolioDetail',
+      component: PortfolioDetail
     },
     {
       path: '/about',

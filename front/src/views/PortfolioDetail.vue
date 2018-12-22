@@ -116,10 +116,11 @@
 
 <script>
 // @ is an alias to /src
-import HelloWorld from "@/components/HelloWorld.vue";
 import Vue from "vue";
+import find from "lodash/find";
 import VueC3 from "vue-c3";
 import { HTTP } from "@/http-constants";
+import router from "vue-router";
 
 export default {
   name: "home",
@@ -148,8 +149,16 @@ export default {
   methods: {
     loadStrategy(newStrategy) {
       console.log("loadStrategy : ", newStrategy);
-      this.updateStrategy(newStrategy);
-      this.updateGraph(newStrategy);
+      this.$router.push({
+        name: "portfolioDetail",
+        params: { strategyCode: newStrategy }
+      });
+      this.currentStrategyCode = newStrategy;
+      this.currentStrategy = find(this.strategies, [
+        "strategyCode",
+        this.currentStrategyCode
+      ]);
+      this.updateGraph();
     },
     addStrategy() {
       console.log("addStrategy");
@@ -175,9 +184,10 @@ export default {
       HTTP.get("/strategies/").then(response => {
         this.strategies = response.data;
         if (this.strategies.length > 0) {
-          this.currentStrategy = this.strategies[0];
-          this.currentStrategyCode = this.currentStrategy.strategyCode;
-          this.updateGraph(this.strategies[0].strategyCode);
+          this.currentStrategy = find(this.strategies, [
+            "strategyCode",
+            this.currentStrategyCode
+          ]);
         }
       });
     },
@@ -187,8 +197,8 @@ export default {
         this.currentStrategyCode = this.currentStrategy.strategyCode;
       });
     },
-    updateGraph(strategyCode) {
-      HTTP.get("/strategies/" + strategyCode + "/history")
+    updateGraph() {
+      HTTP.get("/strategies/" + this.currentStrategyCode + "/history")
         .then(response => {
           const options = {
             size: {
@@ -244,12 +254,13 @@ export default {
     }
   },
   created() {
+    this.currentStrategyCode = this.$route.params.strategyCode;
     this.loadStrategyList();
+    this.updateGraph();
     this.loadStockList();
   },
   mounted() {},
   components: {
-    HelloWorld,
     VueC3
   }
 };

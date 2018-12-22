@@ -27,7 +27,7 @@ public class StrategiesController {
 	private PortfolioService portfolioService;
 
 	@RequestMapping(method = RequestMethod.POST, value = "/{strategyCode}/{usStockCode}/{exUsStockCode}/{bondStockCode}")
-	public void addStrategy(@PathVariable(value = "strategyCode") String strategyCode,
+	public String addStrategy(@PathVariable(value = "strategyCode") String strategyCode,
 			@PathVariable(value = "usStockCode") String usStockCode,
 			@PathVariable(value = "exUsStockCode") String exUsStockCode,
 			@PathVariable(value = "bondStockCode") String bondStockCode) throws Exception {
@@ -53,12 +53,16 @@ public class StrategiesController {
 
 		}
 
+		return "ok";
+
 	}
 
 	@RequestMapping(method = RequestMethod.DELETE, value = "/{strategyCode}")
-	public void deleteOne(@PathVariable(value = "strategyCode") String strategyCode) {
+	public String deleteOne(@PathVariable(value = "strategyCode") String strategyCode) {
 
 		portfolioService.deleteByStrategyCode(strategyCode);
+
+		return "ok";
 
 	}
 

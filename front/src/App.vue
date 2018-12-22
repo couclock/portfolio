@@ -5,6 +5,9 @@
       <h3 class="md-title"
           style="flex: 1">Portfolio management</h3>
       <router-link to="/">
+        <md-button>PF</md-button>
+      </router-link>
+      <router-link to="/portfolios">
         <md-button>Portfolios</md-button>
       </router-link>
       <router-link to="/stocks">

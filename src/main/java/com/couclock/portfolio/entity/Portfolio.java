@@ -2,6 +2,7 @@ package com.couclock.portfolio.entity;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +41,7 @@ public class Portfolio {
 	public PortfolioStatus endStatus;
 
 	@ElementCollection
-	public Map<String, PortfolioStatistic> statistics;
+	public Map<String, PortfolioStatistic> statistics = new HashMap<String, PortfolioStatistic>();
 
 	public double cagr;
 	public double ulcerIndex;
