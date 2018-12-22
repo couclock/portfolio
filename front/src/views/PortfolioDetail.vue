@@ -52,64 +52,6 @@
       </div>
     </div>
 
-    <!-- Action line -->
-    <div class="md-layout md-gutter md-layout-item md-alignment-top-center">
-      <div class="md-layout-item md-size-50">
-
-        <div class="md-layout">
-          <md-field class="md-layout-item">
-            <label>New strategy name</label>
-            <md-input v-model="newStrategyName"></md-input>
-          </md-field>
-          <div class="md-layout-item md-size-5">
-          </div>
-          <md-field  class="md-layout-item">
-            <label for="usStock">US stock</label>
-            <md-select v-model="usStockCode"
-                       md-dense
-                       name="usStock"
-                       id="usStock">
-              <md-option v-for="stock in stockList"
-                         :key="stock.id"
-                         :value="stock.code">{{ stock.code}}</md-option>
-            </md-select>
-          </md-field>
-
-        </div>
-        <div class="md-layout">
-          <md-field  class="md-layout-item">
-            <label for="exUsStock">Ex-US stock</label>
-            <md-select v-model="exUsStockCode"
-                       md-dense
-                       name="exUsStock"
-                       id="exUsStock">
-              <md-option v-for="stock in stockList"
-                         :key="stock.id"
-                         :value="stock.code">{{ stock.code}}</md-option>
-            </md-select>
-          </md-field>
-          <div class="md-layout-item md-size-5">
-          </div>
-          <md-field  class="md-layout-item">
-            <label for="bondStock">Bond stock</label>
-            <md-select v-model="bondStockCode"
-                       md-dense
-                       name="bondStock"
-                       id="bondStock">
-              <md-option v-for="stock in stockList"
-                         :key="stock.id"
-                         :value="stock.code">{{ stock.code}}</md-option>
-            </md-select>
-          </md-field>
-        </div>
-        <div class="md-layout md-alignment-top-center">
-          <md-button class="md-raised md-primary"
-                     @click="addStrategy">Add strategy</md-button>
-        </div>
-
-      </div>
-
-    </div>
   </div>
 
 </template>
@@ -129,12 +71,7 @@ export default {
       handler: new Vue(),
       currentStrategyCode: undefined,
       currentStrategy: undefined,
-      strategies: [],
-      stockList: [],
-      newStrategyName: undefined,
-      usStockCode: undefined,
-      exUsStockCode: undefined,
-      bondStockCode: undefined
+      strategies: []
     };
   },
   filters: {
@@ -148,7 +85,6 @@ export default {
   },
   methods: {
     loadStrategy(newStrategy) {
-      console.log("loadStrategy : ", newStrategy);
       this.$router.push({
         name: "portfolioDetail",
         params: { strategyCode: newStrategy }
@@ -160,26 +96,7 @@ export default {
       ]);
       this.updateGraph();
     },
-    addStrategy() {
-      console.log("addStrategy");
-      HTTP.post(
-        "/strategies/" +
-          this.newStrategyName +
-          "/" +
-          this.usStockCode +
-          "/" +
-          this.exUsStockCode +
-          "/" +
-          this.bondStockCode
-      ).then(response => {
-        this.loadStrategyList();
-      });
-    },
-    loadStockList() {
-      HTTP.get("/stocks/").then(response => {
-        this.stockList = response.data;
-      });
-    },
+
     loadStrategyList() {
       HTTP.get("/strategies/").then(response => {
         this.strategies = response.data;
@@ -257,7 +174,6 @@ export default {
     this.currentStrategyCode = this.$route.params.strategyCode;
     this.loadStrategyList();
     this.updateGraph();
-    this.loadStockList();
   },
   mounted() {},
   components: {
