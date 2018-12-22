@@ -51,6 +51,11 @@ public class StockHistoryService {
 		}
 	}
 
+	@Transactional
+	public void deleteByStock(String stockCode) {
+		stockHistoryRepository.deleteByStock_Code(stockCode);
+	}
+
 	/**
 	 * Find history in submitted map equal or after to afterDate and before
 	 * maxAfterDate<br/>

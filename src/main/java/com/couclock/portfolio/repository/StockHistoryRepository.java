@@ -9,6 +9,8 @@ import com.couclock.portfolio.entity.StockHistory;
 
 public interface StockHistoryRepository extends JpaRepository<StockHistory, Long> {
 
+	long deleteByStock_Code(String code);
+
 	StockHistory findByStock_CodeAndDate(String code, LocalDate date);
 
 	List<StockHistory> findByStock_CodeOrderByDateDesc(String code);

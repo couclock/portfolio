@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.couclock.portfolio.entity.FinStock;
 import com.couclock.portfolio.entity.StockHistory;
+import com.couclock.portfolio.service.QuandlService;
 import com.couclock.portfolio.service.StockHistoryService;
 import com.couclock.portfolio.service.StockService;
 import com.couclock.portfolio.service.YahooService;
@@ -26,10 +27,22 @@ public class StockController {
 	private YahooService yahooService;
 
 	@Autowired
+	private QuandlService quandlService;
+
+	@Autowired
 	private StockService stockService;
 
 	@Autowired
 	private StockHistoryService stockHistoryService;
+
+	@RequestMapping(method = RequestMethod.POST, value = "/{stockCode}")
+	public String addOne(@PathVariable(value = "stockCode") String stockCode) throws Exception {
+
+		stockService.addStock(stockCode);
+
+		return "ok";
+
+	}
 
 	@RequestMapping("/")
 	public List<FinStock> getAll() {
@@ -75,21 +88,48 @@ public class StockController {
 //		return finStock;
 	}
 
-	@RequestMapping(method = RequestMethod.POST, value = "/{stockCode}/update")
-	public List<StockHistory> update(@PathVariable(value = "stockCode") String stockCode) throws IOException {
+	@RequestMapping(method = RequestMethod.POST, value = "/{stockCode}/reset")
+	public String reset(@PathVariable(value = "stockCode") String stockCode) {
 
-		yahooService.updateOneStockHistory(stockCode);
+		stockHistoryService.deleteByStock(stockCode);
+
+		return "ok";
+
+	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/update2")
+	public String updateAll_quandl() throws IOException {
+
+		quandlService.updateStocksHistory();
+
+		return "ok";
+
+	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/update")
+	public String updateAll_yahoo() throws IOException {
+
+		yahooService.updateStocksHistory();
+
+		return "ok";
+
+	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/{stockCode}/update2")
+	public List<StockHistory> updateOne_quandl(@PathVariable(value = "stockCode") String stockCode) throws IOException {
+
+		quandlService.updateOneStockHistory(stockCode);
 
 		return stockHistoryService.getAllByStockCode(stockCode);
 
 	}
 
-	@RequestMapping(method = RequestMethod.POST, value = "/update")
-	public String updateAll() throws IOException {
+	@RequestMapping(method = RequestMethod.POST, value = "/{stockCode}/update")
+	public List<StockHistory> updateOne_yahoo(@PathVariable(value = "stockCode") String stockCode) throws IOException {
 
-		yahooService.updateStocksHistory();
+		yahooService.updateOneStockHistory(stockCode, false);
 
-		return "Ok, done !";
+		return stockHistoryService.getAllByStockCode(stockCode);
 
 	}
 }

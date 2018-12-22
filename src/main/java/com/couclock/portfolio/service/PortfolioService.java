@@ -181,7 +181,7 @@ public class PortfolioService {
 		portfolio.cagr = getCAGR(portfolio);
 		portfolio.ulcerIndex = getUlcerIndex(portfolio);
 
-		portfolio.statistics = getStatistics(portfolio);
+		// portfolio.statistics = getStatistics(portfolio);
 
 		portfolioRepository.save(portfolio);
 

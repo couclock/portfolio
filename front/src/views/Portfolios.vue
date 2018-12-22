@@ -56,7 +56,7 @@
       <md-divider class="md-inset"></md-divider>
     </div>
 
-    <!-- Action line -->
+    <!-- Add form line -->
     <div class="md-layout md-gutter md-layout-item md-alignment-top-center">
       <div class="md-layout-item md-size-50">
 
@@ -123,9 +123,9 @@
         </md-card>
       </div>
     </div>
+    <!-- end Add form line -->
 
     <md-snackbar md-position="center"
-                 md-duration="2000"
                  :md-active.sync="showSnackbar"
                  md-persistent>
       <span>{{ snackbarMessage }}</span>

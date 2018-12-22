@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 import com.couclock.portfolio.entity.FinStock;
 import com.couclock.portfolio.repository.StockRepository;
 
+import yahoofinance.Stock;
+import yahoofinance.YahooFinance;
+
 @Service
 public class StockService {
 
@@ -18,6 +21,28 @@ public class StockService {
 
 	@Autowired
 	private StockRepository stockRepository;
+
+	public void addStock(String stockCode) throws Exception {
+
+		Stock stock = null;
+		try {
+			stock = YahooFinance.get(stockCode + ".PA");
+		} catch (Exception e) {
+			throw new Exception("Invalid stock code");
+		} finally {
+			if (!stock.isValid()) {
+				throw new Exception("Invalid stock code");
+			}
+		}
+
+		FinStock finStock = new FinStock();
+		finStock.code = stockCode;
+		finStock.name = stock.getName();
+		finStock.currency = stock.getCurrency();
+		finStock.stockExchange = stock.getStockExchange();
+
+		this.upsert(finStock);
+	}
 
 	public List<FinStock> findBySubstring(String substring) {
 		return stockRepository
