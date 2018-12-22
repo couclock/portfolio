@@ -52,12 +52,39 @@
       </div>
     </div>
 
+    <div class="md-layout md-gutter md-layout-item md-size-100 md-alignment-center-center">
+      <div class="md-layout md-gutter md-layout-item md-size-50">
+        <md-table v-model="events"
+                  v-if="events.length > 0"
+                  md-sort="date"
+                  md-sort-order="asc"
+                  md-card
+                  class="md-layout-item md-size-100">
+          <md-table-toolbar>
+            <h1 class="md-title">Events</h1>
+          </md-table-toolbar>
+
+          <md-table-row slot="md-table-row"
+                        slot-scope="{ item }">
+            <md-table-cell md-label="ID"
+                           md-numeric>{{ item.id }}</md-table-cell>
+            <md-table-cell md-label="Date"
+                           md-sort-by="date">
+              {{ item.date }}
+            </md-table-cell>
+            <md-table-cell md-label="Type"
+                           md-sort-by="type">{{ item.type }}</md-table-cell>
+            <md-table-cell md-label="Stocks">{{ item.count }} {{ item.stockCode }}</md-table-cell>
+          </md-table-row>
+        </md-table>
+      </div>
+    </div>
+
   </div>
 
 </template>
 
 <script>
-// @ is an alias to /src
 import Vue from "vue";
 import find from "lodash/find";
 import VueC3 from "vue-c3";
@@ -71,7 +98,8 @@ export default {
       handler: new Vue(),
       currentStrategyCode: undefined,
       currentStrategy: undefined,
-      strategies: []
+      strategies: [],
+      events: []
     };
   },
   filters: {
@@ -95,6 +123,7 @@ export default {
         this.currentStrategyCode
       ]);
       this.updateGraph();
+      this.loadEvents();
     },
 
     loadStrategyList() {
@@ -107,6 +136,13 @@ export default {
           ]);
         }
       });
+    },
+    loadEvents() {
+      HTTP.get("/strategies/" + this.currentStrategyCode + "/events").then(
+        response => {
+          this.events = response.data;
+        }
+      );
     },
     updateStrategy(strategyCode) {
       HTTP.get("/strategies/" + strategyCode).then(response => {
@@ -174,6 +210,7 @@ export default {
     this.currentStrategyCode = this.$route.params.strategyCode;
     this.loadStrategyList();
     this.updateGraph();
+    this.loadEvents();
   },
   mounted() {},
   components: {

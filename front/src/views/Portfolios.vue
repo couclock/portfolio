@@ -5,7 +5,7 @@
 
       <md-table v-model="portfolioList"
                 v-if="portfolioList.length > 0"
-                md-sort="strategyCode"
+                md-sort="id"
                 md-sort-order="asc"
                 md-card>
         <md-table-toolbar>
@@ -15,7 +15,8 @@
         <md-table-row slot="md-table-row"
                       slot-scope="{ item }">
           <md-table-cell md-label="ID"
-                         md-numeric>{{ item.id }}</md-table-cell>
+                         md-numeric
+                         md-sort-by="id">{{ item.id }}</md-table-cell>
           <md-table-cell md-label="Code"
                          md-sort-by="strategyCode">
             <router-link :to="{ name: 'portfolioDetail', params: { strategyCode: item.strategyCode }}">
@@ -28,17 +29,22 @@
                          md-sort-by="endDate">{{ item.endDate }}</md-table-cell>
           <md-table-cell md-label="CAGR"
                          md-sort-by="cagr">{{ 100 * item.cagr | formatNb }} %</md-table-cell>
+          <md-table-cell md-label="Ulcer"
+                         md-sort-by="ulcerIndex">{{ item.ulcerIndex | formatNb }} %</md-table-cell>
           <md-table-cell md-label="Actions">
             <md-button class="md-icon-button md-dense md-raised"
-                       @click="processStrategy(item.strategyCode)">
+                       @click="processStrategy(item.strategyCode)"
+                       :disabled="actionsDisabled">
               <md-icon>autorenew</md-icon>
             </md-button>
             <md-button class="md-icon-button md-dense md-raised md-primary"
-                       @click="resetStrategy(item.strategyCode)">
+                       @click="resetStrategy(item.strategyCode)"
+                       :disabled="actionsDisabled">
               <md-icon>settings_backup_restore</md-icon>
             </md-button>
             <md-button class="md-icon-button md-dense md-accent md-raised"
-                       @click="deleteStrategy(item.strategyCode)">
+                       @click="deleteStrategy(item.strategyCode)"
+                       :disabled="actionsDisabled">
               <md-icon>delete</md-icon>
             </md-button>
           </md-table-cell>
@@ -116,8 +122,14 @@
           </md-card-content>
         </md-card>
       </div>
-
     </div>
+
+    <md-snackbar md-position="center"
+                 md-duration="2000"
+                 :md-active.sync="showSnackbar"
+                 md-persistent>
+      <span>{{ snackbarMessage }}</span>
+    </md-snackbar>
 
   </div>
 
@@ -138,7 +150,10 @@ export default {
       newStrategyName: undefined,
       usStockCode: undefined,
       exUsStockCode: undefined,
-      bondStockCode: undefined
+      bondStockCode: undefined,
+      actionsDisabled: false,
+      showSnackbar: false,
+      snackbarMessage: ""
     };
   },
   filters: {
@@ -178,24 +193,37 @@ export default {
     loadPortfolioList() {
       HTTP.get("/strategies/").then(response => {
         this.portfolioList = response.data;
+        this.actionsDisabled = false;
       });
     },
     processStrategy(currentStrategyCode) {
+      this.actionsDisabled = true;
       HTTP.post("/strategies/" + currentStrategyCode + "/process").then(
         response => {
+          this.snackbarMessage =
+            "Your portfolio has been successfully processed ! ";
+          this.showSnackbar = true;
           this.loadPortfolioList();
         }
       );
     },
     resetStrategy(currentStrategyCode) {
+      this.actionsDisabled = true;
       HTTP.post("/strategies/" + currentStrategyCode + "/reset").then(
         response => {
+          this.snackbarMessage =
+            "Your portfolio has been successfully reset ! ";
+          this.showSnackbar = true;
           this.loadPortfolioList();
         }
       );
     },
     deleteStrategy(currentStrategyCode) {
+      this.actionsDisabled = true;
       HTTP.delete("/strategies/" + currentStrategyCode).then(response => {
+        this.snackbarMessage =
+          "Your portfolio has been successfully deleted ! ";
+        this.showSnackbar = true;
         this.loadPortfolioList();
       });
     }

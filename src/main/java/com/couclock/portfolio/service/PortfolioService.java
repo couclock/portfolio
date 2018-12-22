@@ -21,6 +21,7 @@ import com.couclock.portfolio.entity.sub.PortfolioBuyEvent;
 import com.couclock.portfolio.entity.sub.PortfolioEvent;
 import com.couclock.portfolio.entity.sub.PortfolioEvent.EVENT_TYPE;
 import com.couclock.portfolio.entity.sub.PortfolioSellEvent;
+import com.couclock.portfolio.repository.PortfolioEventRepository;
 import com.couclock.portfolio.repository.PortfolioRepository;
 
 /**
@@ -38,6 +39,9 @@ public class PortfolioService {
 
 	@Autowired
 	private PortfolioRepository portfolioRepository;
+
+	@Autowired
+	private PortfolioEventRepository portfolioEventRepository;
 
 	public void deleteByStrategyCode(String strategyCode) {
 		Portfolio pf = portfolioRepository.findByStrategyCodeIgnoreCase(strategyCode);
@@ -74,6 +78,10 @@ public class PortfolioService {
 		}
 
 		return cagr;
+	}
+
+	public List<PortfolioEvent> getEventsByStrategyCode(String strategyCode) {
+		return portfolioEventRepository.findByPortfolio_StrategyCodeOrderByIdDesc(strategyCode);
 	}
 
 	public Map<String, PortfolioStatistic> getStatistics(Portfolio portfolio) throws Exception {

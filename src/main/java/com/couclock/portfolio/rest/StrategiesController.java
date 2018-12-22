@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.couclock.portfolio.entity.Portfolio;
 import com.couclock.portfolio.entity.PortfolioHistory;
 import com.couclock.portfolio.entity.PortfolioStatus;
+import com.couclock.portfolio.entity.sub.PortfolioEvent;
 import com.couclock.portfolio.service.PortfolioService;
 import com.couclock.portfolio.service.StrategyService;
 
@@ -78,6 +79,11 @@ public class StrategiesController {
 
 		return portfolioService.getAll();
 
+	}
+
+	@RequestMapping("/{strategyCode}/events")
+	public List<PortfolioEvent> getEvents(@PathVariable(value = "strategyCode") String strategyCode) {
+		return portfolioService.getEventsByStrategyCode(strategyCode);
 	}
 
 	@RequestMapping("/{strategyCode}/history")

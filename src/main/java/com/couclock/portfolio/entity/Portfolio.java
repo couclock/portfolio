@@ -1,5 +1,6 @@
 package com.couclock.portfolio.entity;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,8 +14,10 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import org.hibernate.annotations.NaturalId;
 
@@ -25,7 +28,13 @@ import com.couclock.portfolio.entity.sub.PortfolioSellEvent;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-public class Portfolio {
+@Table(indexes = { @Index(name = "IDX_STRATCODE", columnList = "strategyCode") })
+public class Portfolio implements Serializable {
+
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 215161339820055103L;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -51,7 +60,7 @@ public class Portfolio {
 	public String bondStockCode;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-	@JoinColumn(name = "portfolio_id")
+	@JoinColumn(name = "portfolio_code", referencedColumnName = "strategyCode")
 	@JsonIgnore
 	public List<PortfolioEvent> events = new ArrayList<>();
 
