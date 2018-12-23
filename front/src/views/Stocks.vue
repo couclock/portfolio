@@ -38,6 +38,12 @@
                          title="Update history (yahoo)">
                 <md-icon>autorenew</md-icon>
               </md-button>
+              <md-button class="md-icon-button md-dense md-raised"
+                         @click="updateStock_bourso(item.code)"
+                         :disabled="actionsDisabled"
+                         title="Update history (bourso)">
+                <md-icon>autorenew</md-icon>
+              </md-button>
               <md-button class="md-icon-button md-dense md-raised md-primary"
                          @click="resetStockHistory(item.code)"
                          :disabled="actionsDisabled"
@@ -162,6 +168,15 @@ export default {
     updateStock_yahoo(stockCode) {
       this.actionsDisabled = true;
       HTTP.post("/stocks/" + stockCode + "/update").then(response => {
+        this.snackbarMessage =
+          "Your stock history has been successfully updated ! ";
+        this.showSnackbar = true;
+        this.loadStockList();
+      });
+    },
+    updateStock_bourso(stockCode) {
+      this.actionsDisabled = true;
+      HTTP.post("/stocks/" + stockCode + "/update_bourso").then(response => {
         this.snackbarMessage =
           "Your stock history has been successfully updated ! ";
         this.showSnackbar = true;

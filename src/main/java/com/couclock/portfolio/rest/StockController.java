@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.couclock.portfolio.entity.FinStock;
 import com.couclock.portfolio.entity.StockHistory;
+import com.couclock.portfolio.service.BoursoService;
 import com.couclock.portfolio.service.QuandlService;
 import com.couclock.portfolio.service.StockHistoryService;
 import com.couclock.portfolio.service.StockService;
@@ -28,6 +29,9 @@ public class StockController {
 
 	@Autowired
 	private QuandlService quandlService;
+
+	@Autowired
+	private BoursoService boursoService;
 
 	@Autowired
 	private StockService stockService;
@@ -112,6 +116,13 @@ public class StockController {
 		yahooService.updateStocksHistory();
 
 		return "ok";
+
+	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/{stockCode}/update_bourso")
+	public void updateOne_bourso(@PathVariable(value = "stockCode") String stockCode) throws IOException {
+
+		boursoService.getStockHistory(stockCode);
 
 	}
 
