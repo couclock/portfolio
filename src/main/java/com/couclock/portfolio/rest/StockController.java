@@ -48,6 +48,16 @@ public class StockController {
 
 	}
 
+	@RequestMapping(method = RequestMethod.DELETE, value = "/{stockCode}")
+	public String deleteOne(@PathVariable(value = "stockCode") String stockCode) {
+
+		this.reset(stockCode);
+		stockService.deleteByCode(stockCode);
+
+		return "ok";
+
+	}
+
 	@RequestMapping("/")
 	public List<FinStock> getAll() {
 

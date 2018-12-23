@@ -26,7 +26,7 @@ public class StockService {
 
 		Stock stock = null;
 		try {
-			stock = YahooFinance.get(stockCode + ".PA");
+			stock = YahooFinance.get(stockCode.toUpperCase() + ".PA");
 		} catch (Exception e) {
 			throw new Exception("Invalid stock code");
 		} finally {
@@ -36,12 +36,19 @@ public class StockService {
 		}
 
 		FinStock finStock = new FinStock();
-		finStock.code = stockCode;
+		finStock.code = stockCode.toUpperCase();
 		finStock.name = stock.getName();
 		finStock.currency = stock.getCurrency();
 		finStock.stockExchange = stock.getStockExchange();
 
 		this.upsert(finStock);
+	}
+
+	public void deleteByCode(String stockCode) {
+		FinStock stock = stockRepository.findByCodeIgnoreCase(stockCode);
+		if (stock != null) {
+			stockRepository.delete(stock);
+		}
 	}
 
 	public List<FinStock> findBySubstring(String substring) {
