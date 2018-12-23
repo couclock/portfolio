@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import com.couclock.portfolio.entity.Portfolio;
 import com.couclock.portfolio.entity.PortfolioHistory;
+import com.couclock.portfolio.entity.PortfolioPeriod;
 import com.couclock.portfolio.entity.PortfolioStatistic;
 import com.couclock.portfolio.entity.PortfolioStatus;
 import com.couclock.portfolio.entity.StockHistory;
@@ -51,7 +52,10 @@ public class PortfolioService {
 	}
 
 	public List<Portfolio> getAll() {
-		return portfolioRepository.findAll();
+		return portfolioRepository.findAll().stream() //
+				.sorted((pf1, pf2) -> pf1.strategyCode.compareTo(pf2.strategyCode)) //
+				.collect(Collectors.toList());
+
 	}
 
 	public Portfolio getByStrategyCode(String strategyCode) {
@@ -82,60 +86,6 @@ public class PortfolioService {
 
 	public List<PortfolioEvent> getEventsByStrategyCode(String strategyCode) {
 		return portfolioEventRepository.findByPortfolio_StrategyCodeOrderByIdDesc(strategyCode);
-	}
-
-	public Map<String, PortfolioStatistic> getStatistics(Portfolio portfolio) throws Exception {
-
-		List<PortfolioEvent> orderedEvents = portfolio.events.stream() //
-				.sorted((e1, e2) -> {
-					if (e1.date.isEqual(e2.date)) {
-						return e1.type.compareTo(e2.type);
-					} else {
-						return e1.date.compareTo(e2.date);
-					}
-				}) //
-				.collect(Collectors.toList());
-
-		Map<String, Map<LocalDate, StockHistory>> stock2H = new HashMap<>();
-		stock2H.put(portfolio.exUsStockCode, stockHistoryService.getAllByStockCode_Map(portfolio.exUsStockCode));
-		stock2H.put(portfolio.usStockCode, stockHistoryService.getAllByStockCode_Map(portfolio.usStockCode));
-		stock2H.put(portfolio.bondStockCode, stockHistoryService.getAllByStockCode_Map(portfolio.bondStockCode));
-
-		Map<String, PortfolioStatistic> stock2stat = portfolio.statistics;
-
-		stock2stat.put(portfolio.exUsStockCode, new PortfolioStatistic());
-		stock2stat.put(portfolio.usStockCode, new PortfolioStatistic());
-		stock2stat.put(portfolio.bondStockCode, new PortfolioStatistic());
-
-		String currentStock = null;
-		LocalDate currentStart = null;
-		Double buyPrice = null;
-		for (PortfolioEvent portfolioEvent : orderedEvents) {
-
-			if (portfolioEvent.type.equals(EVENT_TYPE.BUY)) {
-				PortfolioBuyEvent buyEvent = (PortfolioBuyEvent) portfolioEvent;
-				currentStock = buyEvent.stockCode;
-				currentStart = portfolioEvent.date;
-				StockHistory sh = stockHistoryService.findFirstHistoryAfter(stock2H.get(currentStock), currentStart,
-						currentStart.plusMonths(1));
-				buyPrice = sh.open;
-
-			} else if (portfolioEvent.type.equals(EVENT_TYPE.SELL)) {
-				PortfolioSellEvent sellEvent = (PortfolioSellEvent) portfolioEvent;
-				if (!sellEvent.stockCode.equals(currentStock)) {
-					throw new Exception("Current SellEvent is not for right stockCode");
-				}
-				long curDuration = ChronoUnit.DAYS.between(currentStart, sellEvent.date);
-				stock2stat.get(sellEvent.stockCode).dayCount += curDuration;
-				StockHistory sh = stockHistoryService.findFirstHistoryAfter(stock2H.get(currentStock), sellEvent.date,
-						sellEvent.date.plusMonths(1));
-				double perf = (sh.open - buyPrice) / buyPrice;
-				stock2stat.get(sellEvent.stockCode).performance += perf;
-			}
-		}
-
-		return stock2stat;
-
 	}
 
 	public double getUlcerIndex(final Portfolio portfolio) {
@@ -181,9 +131,70 @@ public class PortfolioService {
 		portfolio.cagr = getCAGR(portfolio);
 		portfolio.ulcerIndex = getUlcerIndex(portfolio);
 
-		// portfolio.statistics = getStatistics(portfolio);
+		processStatistics(portfolio);
 
 		portfolioRepository.save(portfolio);
+
+	}
+
+	private void processStatistics(Portfolio portfolio) throws Exception {
+
+		List<PortfolioEvent> orderedEvents = portfolio.events.stream() //
+				.sorted((e1, e2) -> {
+					if (e1.date.isEqual(e2.date)) {
+						return e1.type.compareTo(e2.type);
+					} else {
+						return e1.date.compareTo(e2.date);
+					}
+				}) //
+				.collect(Collectors.toList());
+
+		Map<String, Map<LocalDate, StockHistory>> stock2H = new HashMap<>();
+		stock2H.put(portfolio.exUsStockCode, stockHistoryService.getAllByStockCode_Map(portfolio.exUsStockCode));
+		stock2H.put(portfolio.usStockCode, stockHistoryService.getAllByStockCode_Map(portfolio.usStockCode));
+		stock2H.put(portfolio.bondStockCode, stockHistoryService.getAllByStockCode_Map(portfolio.bondStockCode));
+
+		portfolio.periods.clear();
+		portfolio.statistics.clear();
+
+		Map<String, PortfolioPeriod> stock2period = new HashMap<>();
+		Map<String, PortfolioStatistic> stock2stat = new HashMap<>();
+
+		for (PortfolioEvent portfolioEvent : orderedEvents) {
+
+			if (portfolioEvent.type.equals(EVENT_TYPE.BUY)) {
+				PortfolioBuyEvent buyEvent = (PortfolioBuyEvent) portfolioEvent;
+				PortfolioPeriod pfP = new PortfolioPeriod();
+				pfP.stockCode = buyEvent.stockCode;
+				pfP.startDate = portfolioEvent.date;
+				pfP.buyPrice = stock2H.get(buyEvent.stockCode).get(portfolioEvent.date).open;
+				pfP.count = buyEvent.count;
+				stock2period.put(buyEvent.stockCode, pfP);
+
+			} else if (portfolioEvent.type.equals(EVENT_TYPE.SELL)) {
+				PortfolioSellEvent sellEvent = (PortfolioSellEvent) portfolioEvent;
+				if (!stock2period.containsKey(sellEvent.stockCode)) {
+					throw new Exception("Current SellEvent (" + sellEvent + ") cannot be linked to buyEvent");
+				}
+				PortfolioPeriod pfP = stock2period.get(sellEvent.stockCode);
+				pfP.endDate = sellEvent.date;
+				pfP.sellPrice = stock2H.get(sellEvent.stockCode).get(portfolioEvent.date).open;
+				pfP.processDuration();
+				pfP.processPerf();
+
+				portfolio.periods.add(pfP);
+				stock2period.remove(sellEvent.stockCode);
+
+				if (!stock2stat.containsKey(sellEvent.stockCode)) {
+					stock2stat.put(sellEvent.stockCode, new PortfolioStatistic());
+					stock2stat.get(sellEvent.stockCode).stockCode = sellEvent.stockCode;
+				}
+				stock2stat.get(sellEvent.stockCode).dayCount += pfP.duration;
+				stock2stat.get(sellEvent.stockCode).performance += pfP.perf;
+			}
+		}
+
+		portfolio.statistics.addAll(stock2stat.values());
 
 	}
 

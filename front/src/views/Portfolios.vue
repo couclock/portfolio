@@ -5,7 +5,7 @@
 
       <md-table v-model="portfolioList"
                 v-if="portfolioList.length > 0"
-                md-sort="id"
+                md-sort="strategyCode"
                 md-sort-order="asc"
                 md-card>
         <md-table-toolbar>

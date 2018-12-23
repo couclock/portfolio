@@ -39,9 +39,9 @@
             UlcerIndex : {{ currentStrategy.ulcerIndex | formatNb }} %
           </div>
           <div class="md-layout"
-               v-for="(stat, stock, index) in currentStrategy.statistics"
-               :key="index">
-            {{ stock }} : {{ 100 * stat.performance | formatNb }} % ({{ stat.dayCount }} days)
+               v-for="stat in currentStrategy.statistics"
+               :key="stat.stockCode">
+            {{ stat.stockCode }} : {{ 100 * stat.performance | formatNb }} % ({{ stat.dayCount }} days)
           </div>
 
         </div>
@@ -52,8 +52,69 @@
       </div>
     </div>
 
-    <div class="md-layout md-gutter md-layout-item md-size-100 md-alignment-center-center">
-      <div class="md-layout md-gutter md-layout-item md-size-50">
+    <!-- Periods & Events -->
+    <div class="md-layout md-gutter md-layout-item md-size-100 md-alignment-top-center">
+
+      <!-- Periods -->
+      <div class="md-layout md-gutter md-layout-item md-size-60">
+        <md-table v-model="currentStrategy.periods"
+                  v-if="currentStrategy && currentStrategy.periods.length > 0"
+                  md-sort="startDate"
+                  md-sort-order="desc"
+                  md-card
+                  class="md-layout-item md-size-100">
+          <md-table-toolbar>
+            <h1 class="md-title">Periods</h1>
+          </md-table-toolbar>
+
+          <md-table-row slot="md-table-row"
+                        slot-scope="{ item }">
+
+            <md-table-cell md-label="Stock"
+                           md-sort-by="stockCode">
+              {{ item.stockCode }}
+            </md-table-cell>
+            <md-table-cell md-label="Buy date"
+                           md-sort-by="startDate">
+              {{ item.startDate }}
+            </md-table-cell>
+            <md-table-cell md-label="Buy price"
+                           md-sort-by="buyPrice"
+                           md-numeric>
+              {{ item.buyPrice | formatNb }} €
+            </md-table-cell>
+            <md-table-cell md-label="Sell date"
+                           md-sort-by="endDate">
+              {{ item.endDate }}
+            </md-table-cell>
+            <md-table-cell md-label="Sell price"
+                           md-sort-by="sellPrice"
+                           md-numeric>
+              {{ item.sellPrice | formatNb }} €
+            </md-table-cell>
+            <md-table-cell md-label="Count"
+                           md-sort-by="count"
+                           md-numeric>
+              {{ item.count }}
+            </md-table-cell>
+            <md-table-cell md-label="Duration"
+                           md-sort-by="duration"
+                           md-numeric>
+              {{ item.duration }}
+            </md-table-cell>
+            <md-table-cell md-label="Perf"
+                           md-sort-by="perf"
+                           md-numeric>
+              {{ 100 * item.perf | formatNb }} %
+            </md-table-cell>
+
+          </md-table-row>
+        </md-table>
+      </div>
+      <!-- end Periods -->
+
+      <!-- Events -->
+      <div class="md-layout md-gutter md-layout-item md-size-40">
         <md-table v-model="events"
                   v-if="events.length > 0"
                   md-sort="date"
@@ -78,7 +139,9 @@
           </md-table-row>
         </md-table>
       </div>
+      <!-- end Events -->
     </div>
+    <!-- endPeriods & Events -->
 
   </div>
 

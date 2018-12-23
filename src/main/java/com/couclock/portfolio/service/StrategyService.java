@@ -54,9 +54,8 @@ public class StrategyService {
 			if (monthFirstDay) {
 				String targetStock = getToBuyStockOnMonthStart(currentDate, stock2H, usStockCode, exUsStockCode,
 						bondStockCode);
-				if (pfStatus.toSell.contains(targetStock)) {
-					pfStatus.toSell.remove(targetStock);
-				} else if (pfStatus.containStock(targetStock)) {
+				pfStatus.toSell.remove(targetStock);
+				if (pfStatus.containStock(targetStock)) {
 					;
 				} else {
 					pfStatus.toBuy.clear();
@@ -88,8 +87,8 @@ public class StrategyService {
 				pfStatus.toSell.removeAll(stockToSellToday);
 			}
 
-			// Try to buy what you should
-			if (!pfStatus.toBuy.isEmpty()) {
+			// Try to buy what you should when all stock to sell are sold
+			if (!pfStatus.toBuy.isEmpty() && pfStatus.toSell.isEmpty()) {
 				List<String> stockToBuyToday = pfStatus.toBuy.stream() //
 						.filter(oneStockCode -> stock2H.get(oneStockCode).containsKey(curDate)) //
 						.collect(Collectors.toList());
@@ -106,10 +105,8 @@ public class StrategyService {
 
 					}
 				});
-				// Empty toBuy list when all stock to sell are sold
-				if (pfStatus.toSell.isEmpty()) {
-					pfStatus.toBuy.removeAll(stockToBuyToday);
-				}
+
+				pfStatus.toBuy.removeAll(stockToBuyToday);
 			}
 
 			PortfolioHistory todayH = getTodayHistory(curDate, pfStatus, stock2H);

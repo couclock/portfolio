@@ -3,9 +3,7 @@ package com.couclock.portfolio.entity;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.persistence.CascadeType;
 import javax.persistence.ElementCollection;
@@ -50,7 +48,10 @@ public class Portfolio implements Serializable {
 	public PortfolioStatus endStatus;
 
 	@ElementCollection
-	public Map<String, PortfolioStatistic> statistics = new HashMap<String, PortfolioStatistic>();
+	public List<PortfolioStatistic> statistics = new ArrayList<>();
+
+	@ElementCollection
+	public List<PortfolioPeriod> periods = new ArrayList<>();
 
 	public double cagr;
 	public double ulcerIndex;
