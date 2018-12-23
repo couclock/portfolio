@@ -25,4 +25,10 @@ public class PortfolioHistory {
 		this.date = date;
 		this.value = value;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("PortfolioHistory [id=%s, date=%s, value=%s]", id, date, value);
+	}
+
 }

@@ -32,4 +32,10 @@ public class StockHistory {
 
 	public long volume;
 
+	@Override
+	public String toString() {
+		return String.format("StockHistory [id=%s, stock=%s, date=%s, open=%s, close=%s, low=%s, high=%s, volume=%s]",
+				id, stock.code, date, open, close, low, high, volume);
+	}
+
 }

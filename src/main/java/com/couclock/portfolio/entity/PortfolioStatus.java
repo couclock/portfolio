@@ -2,6 +2,7 @@ package com.couclock.portfolio.entity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.persistence.ElementCollection;
@@ -36,8 +37,23 @@ public class PortfolioStatus {
 	@ElementCollection
 	public List<MyStock> myStocks = new ArrayList<>();
 
+	@ElementCollection
+	public List<String> toBuy = new ArrayList<>();
+
+	@ElementCollection
+	public List<String> toSell = new ArrayList<>();
+
 	public void addStock(long count, String stockCode) {
-		myStocks.add(new MyStock(count, stockCode));
+		Optional<MyStock> found = myStocks.stream() //
+				.filter(oneStock -> {
+					return oneStock.stockCode == stockCode;
+				}) //
+				.findFirst();
+		if (found.isPresent()) {
+			found.get().count = found.get().count + count;
+		} else {
+			myStocks.add(new MyStock(count, stockCode));
+		}
 	}
 
 	public boolean containStock(String stockCode) {
@@ -45,6 +61,20 @@ public class PortfolioStatus {
 				.anyMatch(oneStock -> {
 					return oneStock.stockCode == stockCode;
 				});
+	}
+
+	public MyStock getStock(String stockCode) {
+		Optional<MyStock> found = myStocks.stream() //
+				.filter(oneStock -> {
+					return oneStock.stockCode == stockCode;
+				}) //
+				.findFirst();
+
+		if (found.isPresent()) {
+			return found.get();
+		} else {
+			return null;
+		}
 	}
 
 	public void removeStock(String stockCode) {
@@ -57,15 +87,8 @@ public class PortfolioStatus {
 
 	@Override
 	public String toString() {
-		return String.format("PortfolioStatus [money=%s, myStocks=%s]", money, myStocks);
-	}
-
-	@Override
-	protected PortfolioStatus clone() {
-		PortfolioStatus pfStatus = new PortfolioStatus();
-		pfStatus.money = this.money;
-		pfStatus.myStocks = new ArrayList<>(this.myStocks);
-		return pfStatus;
+		return String.format("PortfolioStatus [money=%s, myStocks=%s, toBuy=%s, toSell=%s]", money, myStocks, toBuy,
+				toSell);
 	}
 
 }

@@ -40,7 +40,7 @@ public class StrategiesController {
 		} else {
 			portfolio = new Portfolio();
 			portfolio.strategyCode = strategyCode;
-			portfolio.startDate = LocalDate.parse("2005-01-01");
+			portfolio.startDate = LocalDate.parse("2017-01-01");
 			portfolio.startMoney = 10000;
 			portfolio.addAddMoneyEvent(portfolio.startDate, portfolio.startMoney);
 			portfolio.endStatus = new PortfolioStatus();
