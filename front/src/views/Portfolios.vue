@@ -1,7 +1,7 @@
 <template>
   <div class="md-layout md-gutter md-alignment-top-center">
 
-    <div class="md-layout md-layout-item md-size-50 md-alignment-top-center">
+    <div class="md-layout md-layout-item md-size-75 md-alignment-top-center">
 
       <md-table v-model="portfolioList"
                 v-if="portfolioList.length > 0"
@@ -27,6 +27,11 @@
                          md-sort-by="startDate">{{ item.startDate }}</md-table-cell>
           <md-table-cell md-label="End date"
                          md-sort-by="endDate">{{ item.endDate }}</md-table-cell>
+          <md-table-cell md-label="Start money"
+                         md-sort-by="startMoney">{{ item.startMoney | formatNb }} €</md-table-cell>
+          <md-table-cell md-label="End money"
+                         md-sort-by="endMoney">{{ item.endMoney | formatNb }} €</md-table-cell>
+
           <md-table-cell md-label="CAGR"
                          md-sort-by="cagr">{{ 100 * item.cagr | formatNb }} %</md-table-cell>
           <md-table-cell md-label="Ulcer"

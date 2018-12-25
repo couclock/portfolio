@@ -36,12 +36,12 @@ public class StrategiesController {
 		Portfolio portfolio = portfolioService.getByStrategyCode(strategyCode);
 
 		if (portfolio != null) {
-			throw new Exception("that strategyCode already exists !");
+			throw new Exception("That strategyCode already exists !");
 		} else {
 			portfolio = new Portfolio();
 			portfolio.strategyCode = strategyCode;
 			portfolio.startDate = LocalDate.parse("2010-01-01");
-			portfolio.startMoney = 10000;
+			portfolio.startMoney = portfolio.endMoney = 10000;
 			portfolio.addAddMoneyEvent(portfolio.startDate, portfolio.startMoney);
 			portfolio.endStatus = new PortfolioStatus();
 			portfolio.endStatus.money = portfolio.startMoney;

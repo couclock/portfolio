@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -42,6 +43,9 @@ public class Portfolio implements Serializable {
 	public String strategyCode;
 
 	public double startMoney;
+
+	@Column(name = "endMoney", columnDefinition = "double precision default '0'", nullable = false)
+	public double endMoney;
 	public LocalDate startDate;
 	public LocalDate endDate;
 	@Embedded

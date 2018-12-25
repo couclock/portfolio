@@ -119,7 +119,8 @@ public class StrategyService {
 			currentDate = currentDate.plusDays(1);
 		}
 
-		pf.endDate = targetDate;
+		pf.endDate = pf.history.get(pf.history.size() - 1).date;
+		pf.endMoney = pf.history.get(pf.history.size() - 1).value;
 		pf.endStatus = pfStatus;
 		log.warn("FINAL pf : " + pf);
 
@@ -213,9 +214,6 @@ public class StrategyService {
 
 	private PortfolioHistory getTodayHistory(LocalDate curDate, PortfolioStatus pfStatus,
 			Map<String, Map<LocalDate, StockHistory>> stock2h) {
-
-		PortfolioHistory result = new PortfolioHistory();
-		result.date = curDate;
 
 		double dayValue = pfStatus.money;
 

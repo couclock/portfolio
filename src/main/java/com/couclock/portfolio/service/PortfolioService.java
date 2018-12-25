@@ -62,7 +62,47 @@ public class PortfolioService {
 		return portfolioRepository.findByStrategyCodeIgnoreCase(strategyCode);
 	}
 
-	public double getCAGR(final Portfolio portfolio) {
+	public List<PortfolioEvent> getEventsByStrategyCode(String strategyCode) {
+		return portfolioEventRepository.findByPortfolio_StrategyCodeOrderByIdDesc(strategyCode);
+	}
+
+	public Portfolio initPortfolio(Portfolio portfolio) {
+		portfolio.startDate = LocalDate.parse("2010-01-01");
+		portfolio.startMoney = 10000;
+		portfolio.events.clear();
+		portfolio.history.clear();
+		portfolio.periods.clear();
+		portfolio.statistics.clear();
+
+		portfolio.addAddMoneyEvent(portfolio.startDate, portfolio.startMoney);
+		portfolio.endStatus = new PortfolioStatus();
+		portfolio.endStatus.money = portfolio.startMoney;
+		portfolio.endDate = portfolio.startDate;
+		portfolio.endMoney = portfolio.startMoney;
+
+		return portfolio;
+
+	}
+
+	/**
+	 * Upsert a portfolio in database
+	 *
+	 * @param strategyCode
+	 * @param portfolio
+	 * @throws Exception
+	 */
+	public void upsert(Portfolio portfolio) throws Exception {
+
+		portfolio.cagr = getCAGR(portfolio);
+		portfolio.ulcerIndex = getUlcerIndex(portfolio);
+
+		processStatistics(portfolio);
+
+		portfolioRepository.save(portfolio);
+
+	}
+
+	private double getCAGR(final Portfolio portfolio) {
 
 		List<PortfolioHistory> orderedPFHistory = portfolio.history.stream() //
 				.sorted((h1, h2) -> h1.date.compareTo(h2.date))//
@@ -84,11 +124,7 @@ public class PortfolioService {
 		return cagr;
 	}
 
-	public List<PortfolioEvent> getEventsByStrategyCode(String strategyCode) {
-		return portfolioEventRepository.findByPortfolio_StrategyCodeOrderByIdDesc(strategyCode);
-	}
-
-	public double getUlcerIndex(final Portfolio portfolio) {
+	private double getUlcerIndex(final Portfolio portfolio) {
 
 		double sumSq = 0;
 		double maxValue = 0;
@@ -101,39 +137,6 @@ public class PortfolioService {
 		}
 		double ulcerIndex = Math.sqrt(sumSq / portfolio.history.size());
 		return ulcerIndex;
-
-	}
-
-	public Portfolio initPortfolio(Portfolio portfolio) {
-		portfolio.startDate = LocalDate.parse("2010-01-01");
-		portfolio.startMoney = 10000;
-		portfolio.events.clear();
-		portfolio.history.clear();
-
-		portfolio.addAddMoneyEvent(portfolio.startDate, portfolio.startMoney);
-		portfolio.endStatus = new PortfolioStatus();
-		portfolio.endStatus.money = portfolio.startMoney;
-		portfolio.endDate = portfolio.startDate;
-
-		return portfolio;
-
-	}
-
-	/**
-	 * Upsert a portfolio in database
-	 *
-	 * @param strategyCode
-	 * @param portfolio
-	 * @throws Exception
-	 */
-	public void upsert(Portfolio portfolio) throws Exception {
-
-		portfolio.cagr = getCAGR(portfolio);
-		portfolio.ulcerIndex = getUlcerIndex(portfolio);
-
-		processStatistics(portfolio);
-
-		portfolioRepository.save(portfolio);
 
 	}
 
