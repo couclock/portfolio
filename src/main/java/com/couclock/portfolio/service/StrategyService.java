@@ -1,7 +1,6 @@
 package com.couclock.portfolio.service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,11 +47,12 @@ public class StrategyService {
 
 		while (currentDate.isBefore(targetDate)) {
 
-			boolean monthFirstDay = currentDate.getDayOfMonth() == 1;
+			boolean monthLastDay = currentDate.plusDays(1).getDayOfMonth() == 1;
 
-			// On month start, calculate momentums
-			if (monthFirstDay) {
-				String targetStock = getToBuyStockOnMonthStart(currentDate, stock2H, usStockCode, exUsStockCode,
+			// On month last day, calculate momentums
+			if (monthLastDay) {
+
+				String targetStock = getToBuyStockOnNextMonthStart(currentDate, stock2H, usStockCode, exUsStockCode,
 						bondStockCode);
 				pfStatus.toSell.remove(targetStock);
 				if (pfStatus.containStock(targetStock)) {
@@ -66,13 +66,14 @@ public class StrategyService {
 						}
 					});
 				}
-				log.info("Selected targetStock for current month [" + currentDate + "] : " + targetStock);
+				log.info("Selected targetStock for next month [" + currentDate + "] : " + targetStock);
+
 			}
 
 			final LocalDate curDate = currentDate;
 
 			// Try to sell what you should
-			if (!pfStatus.toSell.isEmpty()) {
+			if (!monthLastDay && !pfStatus.toSell.isEmpty()) {
 				List<String> stockToSellToday = pfStatus.toSell.stream() //
 						.filter(oneStockCode -> stock2H.get(oneStockCode).containsKey(curDate)) //
 						.collect(Collectors.toList());
@@ -88,7 +89,7 @@ public class StrategyService {
 			}
 
 			// Try to buy what you should when all stock to sell are sold
-			if (!pfStatus.toBuy.isEmpty() && pfStatus.toSell.isEmpty()) {
+			if (!monthLastDay && !pfStatus.toBuy.isEmpty() && pfStatus.toSell.isEmpty()) {
 				List<String> stockToBuyToday = pfStatus.toBuy.stream() //
 						.filter(oneStockCode -> stock2H.get(oneStockCode).containsKey(curDate)) //
 						.collect(Collectors.toList());
@@ -129,69 +130,27 @@ public class StrategyService {
 	}
 
 	/**
-	 * Get Perf for last monthCount months using date as start date
+	 * Get stocks to buy considering accelereted momentum strategy
 	 *
-	 * @param allHistories
-	 * @param date
-	 * @param monthCount
+	 * @param currentDate   Last day of current month
+	 * @param stock2H
+	 * @param usStockCode
+	 * @param exUsStockCode
+	 * @param bondStockCode
 	 * @return
 	 * @throws Exception
 	 */
-	public double getXMonthPerf(Map<LocalDate, StockHistory> allHistories, LocalDate date, int monthCount)
-			throws Exception {
-
-		LocalDate beginDate = date.minusMonths(monthCount);
-		StockHistory endH = stockHistoryService.findFirstHistoryBefore(allHistories, date, beginDate);
-		StockHistory startH = stockHistoryService.findFirstHistoryBefore(allHistories, beginDate,
-				beginDate.minusMonths(monthCount));
-
-		if (endH == null || startH == null) {
-			return -10000;
-		}
-
-		double diff = endH.close - startH.close;
-		double perf = diff / startH.close;
-
-		return perf * 100;
-	}
-
-	private List<PortfolioHistory> getPartialHistory(LocalDate startDate, LocalDate endDate, PortfolioStatus pfStatus,
-			Map<String, Map<LocalDate, StockHistory>> stock2h) {
-
-		List<PortfolioHistory> result = new ArrayList<>();
-		LocalDate curDate = LocalDate.from(startDate);
-		while (curDate.isBefore(endDate)) {
-
-			double dayValue = pfStatus.money;
-			boolean allFound = true;
-
-			for (MyStock oneStock : pfStatus.myStocks) {
-				if (stock2h.containsKey(oneStock.stockCode) && stock2h.get(oneStock.stockCode).containsKey(curDate)) {
-					dayValue += oneStock.count * stock2h.get(oneStock.stockCode).get(curDate).close;
-				} else {
-					allFound = false;
-				}
-			}
-			if (allFound) {
-				result.add(new PortfolioHistory(curDate, dayValue));
-			}
-
-			curDate = curDate.plusDays(1);
-		}
-
-		return result;
-	}
-
-	private String getToBuyStockOnMonthStart(LocalDate currentDate, Map<String, Map<LocalDate, StockHistory>> stock2H,
-			String usStockCode, String exUsStockCode, String bondStockCode) throws Exception {
+	private String getToBuyStockOnNextMonthStart(LocalDate currentDate,
+			Map<String, Map<LocalDate, StockHistory>> stock2H, String usStockCode, String exUsStockCode,
+			String bondStockCode) throws Exception {
 
 		// Get Momentum on exUS stock and on sp500 stock
-		double momentumExUS = getXMonthPerf(stock2H.get(exUsStockCode), currentDate.minusDays(1), 1)
-				+ getXMonthPerf(stock2H.get(exUsStockCode), currentDate.minusDays(1), 3)
-				+ getXMonthPerf(stock2H.get(exUsStockCode), currentDate.minusDays(1), 6);
-		double momentumSP500 = getXMonthPerf(stock2H.get(usStockCode), currentDate.minusDays(1), 1)
-				+ getXMonthPerf(stock2H.get(usStockCode), currentDate.minusDays(1), 3)
-				+ getXMonthPerf(stock2H.get(usStockCode), currentDate.minusDays(1), 6);
+		double momentumExUS = getXMonthPerf(stock2H.get(exUsStockCode), currentDate, 1)
+				+ getXMonthPerf(stock2H.get(exUsStockCode), currentDate, 3)
+				+ getXMonthPerf(stock2H.get(exUsStockCode), currentDate, 6);
+		double momentumSP500 = getXMonthPerf(stock2H.get(usStockCode), currentDate, 1)
+				+ getXMonthPerf(stock2H.get(usStockCode), currentDate, 3)
+				+ getXMonthPerf(stock2H.get(usStockCode), currentDate, 6);
 
 		// Set targetStock
 		String targetStock = null;
@@ -233,6 +192,33 @@ public class StrategyService {
 			return null;
 		}
 
+	}
+
+	/**
+	 * Get Perf for last monthCount months using date as start date
+	 *
+	 * @param allHistories
+	 * @param date
+	 * @param monthCount
+	 * @return
+	 * @throws Exception
+	 */
+	private double getXMonthPerf(Map<LocalDate, StockHistory> allHistories, LocalDate date, int monthCount)
+			throws Exception {
+
+		LocalDate beginDate = date.minusMonths(monthCount);
+		StockHistory endH = stockHistoryService.findFirstHistoryBefore(allHistories, date, beginDate);
+		StockHistory startH = stockHistoryService.findFirstHistoryBefore(allHistories, beginDate,
+				beginDate.minusMonths(monthCount));
+
+		if (endH == null || startH == null) {
+			return -10000;
+		}
+
+		double diff = endH.close - startH.close;
+		double perf = diff / startH.close;
+
+		return perf * 100;
 	}
 
 }

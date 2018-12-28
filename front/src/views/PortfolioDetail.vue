@@ -43,6 +43,9 @@
                :key="stat.stockCode">
             {{ stat.stockCode }} : {{ 100 * stat.performance | formatNb }} % ({{ stat.dayCount }} days)
           </div>
+          <div class="md-layout">
+            {{ currentStrategy.endStatus | pretty}}
+          </div>
 
         </div>
       </div>
@@ -173,6 +176,9 @@ export default {
       }
       value = Math.round(value * 100) / 100;
       return value;
+    },
+    pretty: function(value) {
+      return JSON.stringify(value, null, 2);
     }
   },
   methods: {
