@@ -104,7 +104,8 @@
             </md-table-cell>
             <md-table-cell md-label="Perf"
                            md-sort-by="perf"
-                           md-numeric>
+                           md-numeric
+                           :class="{'green-perf': item.perf > 0, 'red-perf': item.perf < 0}">
               {{ 100 * item.perf | formatNb }} %
             </md-table-cell>
 
@@ -283,4 +284,12 @@ export default {
 </script>
 
 <style scoped>
+.green-perf {
+  font-weight: bold;
+  color: green;
+}
+.red-perf {
+  font-weight: bold;
+  color: red;
+}
 </style>

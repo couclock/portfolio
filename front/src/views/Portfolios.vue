@@ -78,15 +78,19 @@
               </md-field>
               <div class="md-layout-item md-size-5">
               </div>
-              <md-field  class="md-layout-item">
-                <label for="usStock">US stock</label>
+              <md-field class="md-layout-item">
+                <label for="usStock">
+                  US stock
+                </label>
                 <md-select v-model="usStockCode"
                            md-dense
                            name="usStock"
                            id="usStock">
                   <md-option v-for="stock in stockList"
                              :key="stock.id"
-                             :value="stock.code">{{ stock.code}}</md-option>
+                             :value="stock.code">
+                    {{ stock.code }}
+                  </md-option>
                 </md-select>
               </md-field>
 
