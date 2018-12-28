@@ -14,8 +14,10 @@ import org.springframework.stereotype.Service;
 import com.couclock.portfolio.entity.Portfolio;
 import com.couclock.portfolio.entity.PortfolioHistory;
 import com.couclock.portfolio.entity.PortfolioStatus;
-import com.couclock.portfolio.entity.PortfolioStatus.MyStock;
+import com.couclock.portfolio.entity.PortfolioStatus.MyCurrentStock;
+import com.couclock.portfolio.entity.StockDistribution;
 import com.couclock.portfolio.entity.StockHistory;
+import com.couclock.portfolio.entity.strategies.AcceleratedMomentumStrategy;
 
 /**
  *
@@ -34,16 +36,24 @@ public class StrategyService {
 
 		LocalDate currentDate = LocalDate.from(pf.endDate);
 		LocalDate targetDate = LocalDate.now();
-		PortfolioStatus pfStatus = pf.endStatus;
+		PortfolioStatus pfStatus = pf.currentStatus;
 
-		String usStockCode = pf.usStockCode;
-		String exUsStockCode = pf.exUsStockCode;
-		String bondStockCode = pf.bondStockCode;
+		AcceleratedMomentumStrategy strategyParameters = (AcceleratedMomentumStrategy) pf.strategyParameters;
+
+		List<StockDistribution> usStocks = strategyParameters.usStocks;
+		List<StockDistribution> exUsStocks = strategyParameters.exUsStocks;
+		List<StockDistribution> bondStocks = strategyParameters.bondStocks;
 
 		Map<String, Map<LocalDate, StockHistory>> stock2H = new HashMap<>();
-		stock2H.put(exUsStockCode, stockHistoryService.getAllByStockCode_Map(exUsStockCode));
-		stock2H.put(usStockCode, stockHistoryService.getAllByStockCode_Map(usStockCode));
-		stock2H.put(bondStockCode, stockHistoryService.getAllByStockCode_Map(bondStockCode));
+		for (StockDistribution oneStock : usStocks) {
+			stock2H.put(oneStock.stockCode, stockHistoryService.getAllByStockCode_Map(oneStock.stockCode));
+		}
+		for (StockDistribution oneStock : exUsStocks) {
+			stock2H.put(oneStock.stockCode, stockHistoryService.getAllByStockCode_Map(oneStock.stockCode));
+		}
+		for (StockDistribution oneStock : bondStocks) {
+			stock2H.put(oneStock.stockCode, stockHistoryService.getAllByStockCode_Map(oneStock.stockCode));
+		}
 
 		while (currentDate.isBefore(targetDate)) {
 
@@ -52,21 +62,25 @@ public class StrategyService {
 			// On month last day, calculate momentums
 			if (monthLastDay) {
 
-				String targetStock = getToBuyStockOnNextMonthStart(currentDate, stock2H, usStockCode, exUsStockCode,
-						bondStockCode);
-				pfStatus.toSell.remove(targetStock);
-				if (pfStatus.containStock(targetStock)) {
+				List<StockDistribution> targetStocks = getToBuyStockOnNextMonthStart(currentDate, stock2H, usStocks,
+						exUsStocks, bondStocks);
+				targetStocks.forEach(oneTargetStock -> {
+					pfStatus.toSell.remove(oneTargetStock.stockCode);
+				});
+				// We consider if at least a targetStock is in current PF, all targetStocks are
+				// in
+				if (!targetStocks.isEmpty() && pfStatus.containStock(targetStocks.get(0).stockCode)) {
 					;
 				} else {
 					pfStatus.toBuy.clear();
-					pfStatus.toBuy.add(targetStock);
-					pfStatus.myStocks.forEach(oneStock -> {
-						if (!pfStatus.toSell.contains(oneStock.stockCode)) {
-							pfStatus.toSell.add(oneStock.stockCode);
+					pfStatus.toBuy.addAll(targetStocks);
+					pfStatus.currentStocks.forEach(oneCurrentStock -> {
+						if (!pfStatus.toSell.contains(oneCurrentStock.stockCode)) {
+							pfStatus.toSell.add(oneCurrentStock.stockCode);
 						}
 					});
 				}
-				log.info("Selected targetStock for next month [" + currentDate + "] : " + targetStock);
+				log.info("Selected targetStock for next month [" + currentDate + "] : " + targetStocks);
 
 			}
 
@@ -90,19 +104,19 @@ public class StrategyService {
 
 			// Try to buy what you should when all stock to sell are sold
 			if (!monthLastDay && !pfStatus.toBuy.isEmpty() && pfStatus.toSell.isEmpty()) {
-				List<String> stockToBuyToday = pfStatus.toBuy.stream() //
-						.filter(oneStockCode -> stock2H.get(oneStockCode).containsKey(curDate)) //
+				List<StockDistribution> stockToBuyToday = pfStatus.toBuy.stream() //
+						.filter(oneStockToBuy -> stock2H.get(oneStockToBuy.stockCode).containsKey(curDate)) //
 						.collect(Collectors.toList());
 
 				stockToBuyToday.forEach(oneStockToBuy -> {
-					StockHistory oneHistory = stock2H.get(oneStockToBuy).get(curDate);
+					StockHistory oneHistory = stock2H.get(oneStockToBuy.stockCode).get(curDate);
 					log.info("toBuy stock history : " + oneHistory);
 
-					long count = Math.round(Math.floor(pfStatus.money / oneHistory.open));
+					long count = Math.round(Math.floor((pfStatus.money * oneStockToBuy.percent) / oneHistory.open));
 					if (count > 0) {
-						pfStatus.addStock(count, oneStockToBuy);
+						pfStatus.addStock(count, oneStockToBuy.stockCode);
 						pfStatus.money -= count * oneHistory.open;
-						pf.addBuyEvent(curDate, count, oneStockToBuy);
+						pf.addBuyEvent(curDate, count, oneStockToBuy.stockCode);
 
 					}
 				});
@@ -122,7 +136,7 @@ public class StrategyService {
 
 		pf.endDate = pf.history.get(pf.history.size() - 1).date;
 		pf.endMoney = pf.history.get(pf.history.size() - 1).value;
-		pf.endStatus = pfStatus;
+		pf.currentStatus = pfStatus;
 		log.warn("FINAL pf : " + pf);
 
 		return pf;
@@ -130,41 +144,47 @@ public class StrategyService {
 	}
 
 	/**
-	 * Get stocks to buy considering accelereted momentum strategy
+	 * Get stocks to buy considering accelerated momentum strategy
 	 *
-	 * @param currentDate   Last day of current month
+	 * @param currentDate Last day of current month
 	 * @param stock2H
-	 * @param usStockCode
-	 * @param exUsStockCode
-	 * @param bondStockCode
+	 * @param usStocks
+	 * @param exUsStocks
+	 * @param bondStocks
 	 * @return
 	 * @throws Exception
 	 */
-	private String getToBuyStockOnNextMonthStart(LocalDate currentDate,
-			Map<String, Map<LocalDate, StockHistory>> stock2H, String usStockCode, String exUsStockCode,
-			String bondStockCode) throws Exception {
+	private List<StockDistribution> getToBuyStockOnNextMonthStart(LocalDate currentDate,
+			Map<String, Map<LocalDate, StockHistory>> stock2H, List<StockDistribution> usStocks,
+			List<StockDistribution> exUsStocks, List<StockDistribution> bondStocks) throws Exception {
 
 		// Get Momentum on exUS stock and on sp500 stock
-		double momentumExUS = getXMonthPerf(stock2H.get(exUsStockCode), currentDate, 1)
-				+ getXMonthPerf(stock2H.get(exUsStockCode), currentDate, 3)
-				+ getXMonthPerf(stock2H.get(exUsStockCode), currentDate, 6);
-		double momentumSP500 = getXMonthPerf(stock2H.get(usStockCode), currentDate, 1)
-				+ getXMonthPerf(stock2H.get(usStockCode), currentDate, 3)
-				+ getXMonthPerf(stock2H.get(usStockCode), currentDate, 6);
+		double momentumExUS = 0;
+		for (StockDistribution oneStock : exUsStocks) {
+			momentumExUS += oneStock.percent * (getXMonthPerf(stock2H.get(oneStock.stockCode), currentDate, 1)
+					+ getXMonthPerf(stock2H.get(oneStock.stockCode), currentDate, 3)
+					+ getXMonthPerf(stock2H.get(oneStock.stockCode), currentDate, 6));
+		}
+		double momentumUS = 0;
+		for (StockDistribution oneStock : usStocks) {
+			momentumUS += oneStock.percent * (getXMonthPerf(stock2H.get(oneStock.stockCode), currentDate, 1)
+					+ getXMonthPerf(stock2H.get(oneStock.stockCode), currentDate, 3)
+					+ getXMonthPerf(stock2H.get(oneStock.stockCode), currentDate, 6));
+		}
 
 		// Set targetStock
-		String targetStock = null;
-		if (momentumSP500 > momentumExUS) {
-			if (momentumSP500 > 0) {
-				targetStock = usStockCode;
+		List<StockDistribution> targetStock = null;
+		if (momentumUS > momentumExUS) {
+			if (momentumUS > 0) {
+				targetStock = usStocks;
 			} else {
-				targetStock = bondStockCode;
+				targetStock = bondStocks;
 			}
 		} else {
 			if (momentumExUS > 0) {
-				targetStock = exUsStockCode;
+				targetStock = exUsStocks;
 			} else {
-				targetStock = bondStockCode;
+				targetStock = bondStocks;
 			}
 		}
 
@@ -178,7 +198,7 @@ public class StrategyService {
 
 		boolean allFound = true;
 
-		for (MyStock oneStock : pfStatus.myStocks) {
+		for (MyCurrentStock oneStock : pfStatus.currentStocks) {
 			if (stock2h.containsKey(oneStock.stockCode) && stock2h.get(oneStock.stockCode).containsKey(curDate)) {
 				dayValue += oneStock.count * stock2h.get(oneStock.stockCode).get(curDate).close;
 			} else {

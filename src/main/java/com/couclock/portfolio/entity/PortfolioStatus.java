@@ -12,15 +12,15 @@ import javax.persistence.Embeddable;
 public class PortfolioStatus {
 
 	@Embeddable
-	public static class MyStock {
+	public static class MyCurrentStock {
 
 		public long count = 0;
 		public String stockCode = null;
 
-		public MyStock() {
+		public MyCurrentStock() {
 		}
 
-		public MyStock(long count, String stockCode) {
+		public MyCurrentStock(long count, String stockCode) {
 			this.count = count;
 			this.stockCode = stockCode;
 		}
@@ -35,16 +35,16 @@ public class PortfolioStatus {
 	public double money = 0;
 
 	@ElementCollection
-	public List<MyStock> myStocks = new ArrayList<>();
+	public List<MyCurrentStock> currentStocks = new ArrayList<>();
 
 	@ElementCollection
-	public List<String> toBuy = new ArrayList<>();
+	public List<StockDistribution> toBuy = new ArrayList<>();
 
 	@ElementCollection
 	public List<String> toSell = new ArrayList<>();
 
 	public void addStock(long count, String stockCode) {
-		Optional<MyStock> found = myStocks.stream() //
+		Optional<MyCurrentStock> found = currentStocks.stream() //
 				.filter(oneStock -> {
 					return oneStock.stockCode == stockCode;
 				}) //
@@ -52,19 +52,19 @@ public class PortfolioStatus {
 		if (found.isPresent()) {
 			found.get().count = found.get().count + count;
 		} else {
-			myStocks.add(new MyStock(count, stockCode));
+			currentStocks.add(new MyCurrentStock(count, stockCode));
 		}
 	}
 
 	public boolean containStock(String stockCode) {
-		return myStocks.stream() //
+		return currentStocks.stream() //
 				.anyMatch(oneStock -> {
 					return oneStock.stockCode == stockCode;
 				});
 	}
 
-	public MyStock getStock(String stockCode) {
-		Optional<MyStock> found = myStocks.stream() //
+	public MyCurrentStock getStock(String stockCode) {
+		Optional<MyCurrentStock> found = currentStocks.stream() //
 				.filter(oneStock -> {
 					return oneStock.stockCode == stockCode;
 				}) //
@@ -78,7 +78,7 @@ public class PortfolioStatus {
 	}
 
 	public void removeStock(String stockCode) {
-		myStocks = myStocks.stream() //
+		currentStocks = currentStocks.stream() //
 				.filter(oneStock -> {
 					return oneStock.stockCode != stockCode;
 				}) //
@@ -87,8 +87,8 @@ public class PortfolioStatus {
 
 	@Override
 	public String toString() {
-		return String.format("PortfolioStatus [money=%s, myStocks=%s, toBuy=%s, toSell=%s]", money, myStocks, toBuy,
-				toSell);
+		return String.format("PortfolioStatus [money=%s, myStocks=%s, toBuy=%s, toSell=%s]", money, currentStocks,
+				toBuy, toSell);
 	}
 
 }

@@ -5,7 +5,7 @@
 
       <md-table v-model="portfolioList"
                 v-if="portfolioList.length > 0"
-                md-sort="strategyCode"
+                md-sort="code"
                 md-sort-order="asc"
                 md-card>
         <md-table-toolbar>
@@ -18,9 +18,9 @@
                          md-numeric
                          md-sort-by="id">{{ item.id }}</md-table-cell>
           <md-table-cell md-label="Code"
-                         md-sort-by="strategyCode">
-            <router-link :to="{ name: 'portfolioDetail', params: { strategyCode: item.strategyCode }}">
-              {{ item.strategyCode }}
+                         md-sort-by="code">
+            <router-link :to="{ name: 'portfolioDetail', params: { code: item.code }}">
+              {{ item.code }}
             </router-link>
           </md-table-cell>
           <md-table-cell md-label="Start date"
@@ -38,17 +38,17 @@
                          md-sort-by="ulcerIndex">{{ item.ulcerIndex | formatNb }} %</md-table-cell>
           <md-table-cell md-label="Actions">
             <md-button class="md-icon-button md-dense md-raised"
-                       @click="processStrategy(item.strategyCode)"
+                       @click="processStrategy(item.code)"
                        :disabled="actionsDisabled">
               <md-icon>autorenew</md-icon>
             </md-button>
             <md-button class="md-icon-button md-dense md-raised md-primary"
-                       @click="resetStrategy(item.strategyCode)"
+                       @click="resetPortfolioBacktest(item.code)"
                        :disabled="actionsDisabled">
               <md-icon>settings_backup_restore</md-icon>
             </md-button>
             <md-button class="md-icon-button md-dense md-accent md-raised"
-                       @click="deleteStrategy(item.strategyCode)"
+                       @click="deletePortfolio(item.code)"
                        :disabled="actionsDisabled">
               <md-icon>delete</md-icon>
             </md-button>
@@ -73,8 +73,8 @@
 
             <div class="md-layout">
               <md-field class="md-layout-item">
-                <label>New strategy name</label>
-                <md-input v-model="newStrategyName"></md-input>
+                <label>New portfolio code</label>
+                <md-input v-model="newPFCode"></md-input>
               </md-field>
               <div class="md-layout-item md-size-5">
               </div>
@@ -125,7 +125,7 @@
             </div>
             <div class="md-layout md-alignment-top-center">
               <md-button class="md-raised md-primary"
-                         @click="addStrategy">Add portfolio</md-button>
+                         @click="addPortfolio">Add portfolio</md-button>
             </div>
 
           </md-card-content>
@@ -156,7 +156,7 @@ export default {
 
       // Add portfolio related vars
       stockList: [],
-      newStrategyName: undefined,
+      newPFCode: undefined,
       usStockCode: undefined,
       exUsStockCode: undefined,
       bondStockCode: undefined,
@@ -175,11 +175,11 @@ export default {
     }
   },
   methods: {
-    addStrategy() {
-      console.log("addStrategy");
+    addPortfolio() {
+      console.log("addPortfolio");
       HTTP.post(
         "/strategies/" +
-          this.newStrategyName +
+          this.newPFCode +
           "/" +
           this.usStockCode +
           "/" +
@@ -188,7 +188,7 @@ export default {
           this.bondStockCode
       ).then(response => {
         this.loadPortfolioList();
-        this.newStrategyName = undefined;
+        this.newPFCode = undefined;
         this.usStockCode = undefined;
         this.exUsStockCode = undefined;
         this.bondStockCode = undefined;
@@ -205,31 +205,26 @@ export default {
         this.actionsDisabled = false;
       });
     },
-    processStrategy(currentStrategyCode) {
+    processStrategy(currentPFCode) {
       this.actionsDisabled = true;
-      HTTP.post("/strategies/" + currentStrategyCode + "/process").then(
-        response => {
-          this.snackbarMessage =
-            "Your portfolio has been successfully processed ! ";
-          this.showSnackbar = true;
-          this.loadPortfolioList();
-        }
-      );
+      HTTP.post("/strategies/" + currentPFCode + "/process").then(response => {
+        this.snackbarMessage =
+          "Your portfolio has been successfully processed ! ";
+        this.showSnackbar = true;
+        this.loadPortfolioList();
+      });
     },
-    resetStrategy(currentStrategyCode) {
+    resetPortfolioBacktest(currentPFCode) {
       this.actionsDisabled = true;
-      HTTP.post("/strategies/" + currentStrategyCode + "/reset").then(
-        response => {
-          this.snackbarMessage =
-            "Your portfolio has been successfully reset ! ";
-          this.showSnackbar = true;
-          this.loadPortfolioList();
-        }
-      );
+      HTTP.post("/strategies/" + currentPFCode + "/reset").then(response => {
+        this.snackbarMessage = "Your portfolio has been successfully reset ! ";
+        this.showSnackbar = true;
+        this.loadPortfolioList();
+      });
     },
-    deleteStrategy(currentStrategyCode) {
+    deletePortfolio(currentPFCode) {
       this.actionsDisabled = true;
-      HTTP.delete("/strategies/" + currentStrategyCode).then(response => {
+      HTTP.delete("/strategies/" + currentPFCode).then(response => {
         this.snackbarMessage =
           "Your portfolio has been successfully deleted ! ";
         this.showSnackbar = true;

@@ -5,16 +5,16 @@
     <div class="md-layout md-gutter md-layout-item md-alignment-center-center">
       <div class="md-layout-item md-size-20">
 
-        <md-field v-if="currentStrategy">
-          <label for="strategy">Strategy</label>
-          <md-select v-model="currentStrategyCode"
-                     @md-selected="loadStrategy"
-                     name="strategy"
+        <md-field v-if="currentPortfolio">
+          <label for="portfolio">Portfolio</label>
+          <md-select v-model="currentPFCode"
+                     @md-selected="loadPortfolio"
+                     name="portfolio"
                      md-dense
-                     id="strategy">
-            <md-option v-for="strat in strategies"
-                       :key="strat.id"
-                       :value="strat.strategyCode">{{ strat.strategyCode }}</md-option>
+                     id="portfolio">
+            <md-option v-for="pf in portfolios"
+                       :key="pf.id"
+                       :value="pf.code">{{ pf.code }}</md-option>
           </md-select>
         </md-field>
       </div>
@@ -25,26 +25,26 @@
     <div class="md-layout md-gutter md-layout-item md-size-100">
 
       <div class="md-layout-item md-size-20">
-        <div v-if="currentStrategy">
+        <div v-if="currentPortfolio">
           <div class="md-layout">
-            Code : {{ currentStrategy.strategyCode }}
+            Code : {{ currentPortfolio.code }}
           </div>
           <div class="md-layout">
-            Last date : {{ currentStrategy.endDate }}
+            Last date : {{ currentPortfolio.endDate }}
           </div>
           <div class="md-layout">
-            CAGR : {{ 100 * currentStrategy.cagr | formatNb }} %
+            CAGR : {{ 100 * currentPortfolio.cagr | formatNb }} %
           </div>
           <div class="md-layout">
-            UlcerIndex : {{ currentStrategy.ulcerIndex | formatNb }} %
+            UlcerIndex : {{ currentPortfolio.ulcerIndex | formatNb }} %
           </div>
           <div class="md-layout"
-               v-for="stat in currentStrategy.statistics"
+               v-for="stat in currentPortfolio.statistics"
                :key="stat.stockCode">
             {{ stat.stockCode }} : {{ 100 * stat.performance | formatNb }} % ({{ stat.dayCount }} days)
           </div>
           <div class="md-layout">
-            {{ currentStrategy.endStatus | pretty}}
+            {{ currentPortfolio.endStatus | pretty}}
           </div>
 
         </div>
@@ -60,8 +60,8 @@
 
       <!-- Periods -->
       <div class="md-layout md-gutter md-layout-item md-size-60">
-        <md-table v-model="currentStrategy.periods"
-                  v-if="currentStrategy && currentStrategy.periods.length > 0"
+        <md-table v-model="currentPortfolio.periods"
+                  v-if="currentPortfolio && currentPortfolio.periods.length > 0"
                   md-sort="startDate"
                   md-sort-order="desc"
                   md-card
@@ -163,9 +163,9 @@ export default {
   data() {
     return {
       handler: new Vue(),
-      currentStrategyCode: undefined,
-      currentStrategy: undefined,
-      strategies: [],
+      currentPFCode: undefined,
+      currentPortfolio: undefined,
+      portfolios: [],
       events: []
     };
   },
@@ -182,46 +182,46 @@ export default {
     }
   },
   methods: {
-    loadStrategy(newStrategy) {
+    loadPortfolio(newPortfolio) {
       this.$router.push({
         name: "portfolioDetail",
-        params: { strategyCode: newStrategy }
+        params: { code: newPortfolio }
       });
-      this.currentStrategyCode = newStrategy;
-      this.currentStrategy = find(this.strategies, [
-        "strategyCode",
-        this.currentStrategyCode
+      this.currentPFCode = newPortfolio;
+      this.currentPortfolio = find(this.portfolios, [
+        "code",
+        this.currentPFCode
       ]);
       this.updateGraph();
       this.loadEvents();
     },
 
-    loadStrategyList() {
+    loadPortfolioList() {
       HTTP.get("/strategies/").then(response => {
-        this.strategies = response.data;
-        if (this.strategies.length > 0) {
-          this.currentStrategy = find(this.strategies, [
-            "strategyCode",
-            this.currentStrategyCode
+        this.portfolios = response.data;
+        if (this.portfolios.length > 0) {
+          this.currentPortfolio = find(this.portfolios, [
+            "code",
+            this.currentPFCode
           ]);
         }
       });
     },
     loadEvents() {
-      HTTP.get("/strategies/" + this.currentStrategyCode + "/events").then(
+      HTTP.get("/strategies/" + this.currentPFCode + "/events").then(
         response => {
           this.events = response.data;
         }
       );
     },
     updateStrategy(strategyCode) {
-      HTTP.get("/strategies/" + strategyCode).then(response => {
-        this.currentStrategy = response.data;
-        this.currentStrategyCode = this.currentStrategy.strategyCode;
+      HTTP.get("/portfolios/" + strategyCode).then(response => {
+        this.currentPortfolio = response.data;
+        this.currentPFCode = this.currentPortfolio.code;
       });
     },
     updateGraph() {
-      HTTP.get("/strategies/" + this.currentStrategyCode + "/history")
+      HTTP.get("/strategies/" + this.currentPFCode + "/history")
         .then(response => {
           const options = {
             size: {
@@ -277,8 +277,8 @@ export default {
     }
   },
   created() {
-    this.currentStrategyCode = this.$route.params.strategyCode;
-    this.loadStrategyList();
+    this.currentPFCode = this.$route.params.code;
+    this.loadPortfolioList();
     this.updateGraph();
     this.loadEvents();
   },

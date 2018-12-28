@@ -17,7 +17,9 @@ import com.couclock.portfolio.entity.PortfolioHistory;
 import com.couclock.portfolio.entity.PortfolioPeriod;
 import com.couclock.portfolio.entity.PortfolioStatistic;
 import com.couclock.portfolio.entity.PortfolioStatus;
+import com.couclock.portfolio.entity.StockDistribution;
 import com.couclock.portfolio.entity.StockHistory;
+import com.couclock.portfolio.entity.strategies.AcceleratedMomentumStrategy;
 import com.couclock.portfolio.entity.sub.PortfolioBuyEvent;
 import com.couclock.portfolio.entity.sub.PortfolioEvent;
 import com.couclock.portfolio.entity.sub.PortfolioEvent.EVENT_TYPE;
@@ -44,8 +46,8 @@ public class PortfolioService {
 	@Autowired
 	private PortfolioEventRepository portfolioEventRepository;
 
-	public void deleteByStrategyCode(String strategyCode) {
-		Portfolio pf = portfolioRepository.findByStrategyCodeIgnoreCase(strategyCode);
+	public void deleteByPortfolioCode(String pfCode) {
+		Portfolio pf = portfolioRepository.findByCodeIgnoreCase(pfCode);
 		if (pf != null) {
 			portfolioRepository.delete(pf);
 		}
@@ -53,17 +55,17 @@ public class PortfolioService {
 
 	public List<Portfolio> getAll() {
 		return portfolioRepository.findAll().stream() //
-				.sorted((pf1, pf2) -> pf1.strategyCode.compareTo(pf2.strategyCode)) //
+				.sorted((pf1, pf2) -> pf1.code.compareTo(pf2.code)) //
 				.collect(Collectors.toList());
 
 	}
 
-	public Portfolio getByStrategyCode(String strategyCode) {
-		return portfolioRepository.findByStrategyCodeIgnoreCase(strategyCode);
+	public Portfolio getByPortfolioCode(String pfCode) {
+		return portfolioRepository.findByCodeIgnoreCase(pfCode);
 	}
 
-	public List<PortfolioEvent> getEventsByStrategyCode(String strategyCode) {
-		return portfolioEventRepository.findByPortfolio_StrategyCodeOrderByIdDesc(strategyCode);
+	public List<PortfolioEvent> getEventsByPortfolioCode(String pfCode) {
+		return portfolioEventRepository.findByPortfolio_CodeOrderByIdDesc(pfCode);
 	}
 
 	public Portfolio initPortfolio(Portfolio portfolio) {
@@ -75,8 +77,8 @@ public class PortfolioService {
 		portfolio.statistics.clear();
 
 		portfolio.addAddMoneyEvent(portfolio.startDate, portfolio.startMoney);
-		portfolio.endStatus = new PortfolioStatus();
-		portfolio.endStatus.money = portfolio.startMoney;
+		portfolio.currentStatus = new PortfolioStatus();
+		portfolio.currentStatus.money = portfolio.startMoney;
 		portfolio.endDate = portfolio.startDate;
 		portfolio.endMoney = portfolio.startMoney;
 
@@ -87,7 +89,7 @@ public class PortfolioService {
 	/**
 	 * Upsert a portfolio in database
 	 *
-	 * @param strategyCode
+	 * @param code
 	 * @param portfolio
 	 * @throws Exception
 	 */
@@ -152,10 +154,18 @@ public class PortfolioService {
 				}) //
 				.collect(Collectors.toList());
 
+		AcceleratedMomentumStrategy strategyParameters = (AcceleratedMomentumStrategy) portfolio.strategyParameters;
+
 		Map<String, Map<LocalDate, StockHistory>> stock2H = new HashMap<>();
-		stock2H.put(portfolio.exUsStockCode, stockHistoryService.getAllByStockCode_Map(portfolio.exUsStockCode));
-		stock2H.put(portfolio.usStockCode, stockHistoryService.getAllByStockCode_Map(portfolio.usStockCode));
-		stock2H.put(portfolio.bondStockCode, stockHistoryService.getAllByStockCode_Map(portfolio.bondStockCode));
+		for (StockDistribution oneStock : strategyParameters.usStocks) {
+			stock2H.put(oneStock.stockCode, stockHistoryService.getAllByStockCode_Map(oneStock.stockCode));
+		}
+		for (StockDistribution oneStock : strategyParameters.exUsStocks) {
+			stock2H.put(oneStock.stockCode, stockHistoryService.getAllByStockCode_Map(oneStock.stockCode));
+		}
+		for (StockDistribution oneStock : strategyParameters.bondStocks) {
+			stock2H.put(oneStock.stockCode, stockHistoryService.getAllByStockCode_Map(oneStock.stockCode));
+		}
 
 		portfolio.periods.clear();
 		portfolio.statistics.clear();

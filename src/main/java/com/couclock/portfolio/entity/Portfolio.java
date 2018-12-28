@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -16,10 +15,12 @@ import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.NaturalId;
 
+import com.couclock.portfolio.entity.strategies.StrategyParameters;
 import com.couclock.portfolio.entity.sub.PortfolioAddMoneyEvent;
 import com.couclock.portfolio.entity.sub.PortfolioBuyEvent;
 import com.couclock.portfolio.entity.sub.PortfolioEvent;
@@ -27,7 +28,7 @@ import com.couclock.portfolio.entity.sub.PortfolioSellEvent;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@Table(indexes = { @Index(name = "IDX_STRATCODE", columnList = "strategyCode") })
+@Table(indexes = { @Index(name = "IDX_PFCODE", columnList = "code") })
 public class Portfolio implements Serializable {
 
 	/**
@@ -40,16 +41,16 @@ public class Portfolio implements Serializable {
 	public long id;
 
 	@NaturalId
-	public String strategyCode;
+	public String code;
 
 	public double startMoney;
-
-	@Column(name = "endMoney", columnDefinition = "double precision default '0'", nullable = false)
 	public double endMoney;
+
 	public LocalDate startDate;
 	public LocalDate endDate;
+
 	@Embedded
-	public PortfolioStatus endStatus;
+	public PortfolioStatus currentStatus;
 
 	@ElementCollection
 	public List<PortfolioStatistic> statistics = new ArrayList<>();
@@ -60,17 +61,16 @@ public class Portfolio implements Serializable {
 	public double cagr;
 	public double ulcerIndex;
 
-	public String usStockCode;
-	public String exUsStockCode;
-	public String bondStockCode;
+	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+	public StrategyParameters strategyParameters;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-	@JoinColumn(name = "portfolio_code", referencedColumnName = "strategyCode")
+	@JoinColumn(name = "portfolio_code", referencedColumnName = "code")
 	@JsonIgnore
 	public List<PortfolioEvent> events = new ArrayList<>();
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-	@JoinColumn(name = "portfolio_id")
+	@JoinColumn(name = "portfolio_code", referencedColumnName = "code")
 	@JsonIgnore
 	public List<PortfolioHistory> history = new ArrayList<>();
 

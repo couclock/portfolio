@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.couclock.portfolio.entity.Portfolio;
 import com.couclock.portfolio.entity.PortfolioHistory;
 import com.couclock.portfolio.entity.PortfolioStatus;
+import com.couclock.portfolio.entity.strategies.AcceleratedMomentumStrategy;
 import com.couclock.portfolio.entity.sub.PortfolioEvent;
 import com.couclock.portfolio.service.PortfolioService;
 import com.couclock.portfolio.service.StrategyService;
@@ -33,22 +34,24 @@ public class StrategiesController {
 			@PathVariable(value = "exUsStockCode") String exUsStockCode,
 			@PathVariable(value = "bondStockCode") String bondStockCode) throws Exception {
 
-		Portfolio portfolio = portfolioService.getByStrategyCode(strategyCode);
+		Portfolio portfolio = portfolioService.getByPortfolioCode(strategyCode);
 
 		if (portfolio != null) {
 			throw new Exception("That strategyCode already exists !");
 		} else {
 			portfolio = new Portfolio();
-			portfolio.strategyCode = strategyCode;
+			portfolio.code = strategyCode;
 			portfolio.startDate = LocalDate.parse("2010-01-01");
 			portfolio.startMoney = portfolio.endMoney = 10000;
 			portfolio.addAddMoneyEvent(portfolio.startDate, portfolio.startMoney);
-			portfolio.endStatus = new PortfolioStatus();
-			portfolio.endStatus.money = portfolio.startMoney;
+			portfolio.currentStatus = new PortfolioStatus();
+			portfolio.currentStatus.money = portfolio.startMoney;
 			portfolio.endDate = portfolio.startDate;
-			portfolio.usStockCode = usStockCode;
-			portfolio.exUsStockCode = exUsStockCode;
-			portfolio.bondStockCode = bondStockCode;
+			AcceleratedMomentumStrategy strategyParameters = new AcceleratedMomentumStrategy();
+			strategyParameters.addUsStock(1, usStockCode);
+			strategyParameters.addExUsStock(1, exUsStockCode);
+			strategyParameters.addBondStock(1, bondStockCode);
+			portfolio.strategyParameters = strategyParameters;
 
 			portfolioService.upsert(portfolio);
 
@@ -61,7 +64,7 @@ public class StrategiesController {
 	@RequestMapping(method = RequestMethod.DELETE, value = "/{strategyCode}")
 	public String deleteOne(@PathVariable(value = "strategyCode") String strategyCode) {
 
-		portfolioService.deleteByStrategyCode(strategyCode);
+		portfolioService.deleteByPortfolioCode(strategyCode);
 
 		return "ok";
 
@@ -70,7 +73,7 @@ public class StrategiesController {
 	@RequestMapping("/{strategyCode}")
 	public Portfolio get(@PathVariable(value = "strategyCode") String strategyCode) {
 
-		return portfolioService.getByStrategyCode(strategyCode);
+		return portfolioService.getByPortfolioCode(strategyCode);
 
 	}
 
@@ -83,25 +86,25 @@ public class StrategiesController {
 
 	@RequestMapping("/{strategyCode}/events")
 	public List<PortfolioEvent> getEvents(@PathVariable(value = "strategyCode") String strategyCode) {
-		return portfolioService.getEventsByStrategyCode(strategyCode);
+		return portfolioService.getEventsByPortfolioCode(strategyCode);
 	}
 
 	@RequestMapping("/{strategyCode}/history")
 	public List<PortfolioHistory> getHistory(@PathVariable(value = "strategyCode") String strategyCode) {
-		return portfolioService.getByStrategyCode(strategyCode).history;
+		return portfolioService.getByPortfolioCode(strategyCode).history;
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/{strategyCode}/process")
 	public Portfolio processStrategy(@PathVariable(value = "strategyCode") String strategyCode) throws Exception {
 
-		Portfolio portfolio = portfolioService.getByStrategyCode(strategyCode);
+		Portfolio portfolio = portfolioService.getByPortfolioCode(strategyCode);
 
 		if (portfolio != null) {
 			portfolio = strategyService.acceleratedDualMomentum(portfolio);
 		} else {
 			portfolio = new Portfolio();
 
-			portfolio.strategyCode = strategyCode;
+			portfolio.code = strategyCode;
 
 			portfolio = portfolioService.initPortfolio(portfolio);
 
@@ -118,7 +121,7 @@ public class StrategiesController {
 	@RequestMapping(method = RequestMethod.POST, value = "/{strategyCode}/reset")
 	public Portfolio resetStrategy(@PathVariable(value = "strategyCode") String strategyCode) throws Exception {
 
-		Portfolio portfolio = portfolioService.getByStrategyCode(strategyCode);
+		Portfolio portfolio = portfolioService.getByPortfolioCode(strategyCode);
 
 		if (portfolio == null) {
 			throw new Exception("Invalid strategy code !");

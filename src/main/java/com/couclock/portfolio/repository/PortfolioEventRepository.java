@@ -8,6 +8,6 @@ import com.couclock.portfolio.entity.sub.PortfolioEvent;
 
 public interface PortfolioEventRepository extends JpaRepository<PortfolioEvent, Long> {
 
-	List<PortfolioEvent> findByPortfolio_StrategyCodeOrderByIdDesc(String code);
+	List<PortfolioEvent> findByPortfolio_CodeOrderByIdDesc(String pfCode);
 
 }

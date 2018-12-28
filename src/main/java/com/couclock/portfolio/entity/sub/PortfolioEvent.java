@@ -31,7 +31,7 @@ public abstract class PortfolioEvent {
 	public EVENT_TYPE type = EVENT_TYPE.ADD_MONEY;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "portfolio_code", referencedColumnName = "strategyCode")
+	@JoinColumn(name = "portfolio_code", referencedColumnName = "code")
 	@JsonIgnore
 	public Portfolio portfolio;
 

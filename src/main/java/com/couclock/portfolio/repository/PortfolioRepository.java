@@ -6,6 +6,6 @@ import com.couclock.portfolio.entity.Portfolio;
 
 public interface PortfolioRepository extends JpaRepository<Portfolio, Long> {
 
-	Portfolio findByStrategyCodeIgnoreCase(String strategyCode);
+	Portfolio findByCodeIgnoreCase(String pfCode);
 
 }
