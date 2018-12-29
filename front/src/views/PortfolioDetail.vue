@@ -197,7 +197,7 @@ export default {
     },
 
     loadPortfolioList() {
-      HTTP.get("/strategies/").then(response => {
+      HTTP.get("/portfolios/").then(response => {
         this.portfolios = response.data;
         if (this.portfolios.length > 0) {
           this.currentPortfolio = find(this.portfolios, [
@@ -208,7 +208,7 @@ export default {
       });
     },
     loadEvents() {
-      HTTP.get("/strategies/" + this.currentPFCode + "/events").then(
+      HTTP.get("/portfolios/" + this.currentPFCode + "/events").then(
         response => {
           this.events = response.data;
         }
@@ -221,7 +221,7 @@ export default {
       });
     },
     updateGraph() {
-      HTTP.get("/strategies/" + this.currentPFCode + "/history")
+      HTTP.get("/portfolios/" + this.currentPFCode + "/history")
         .then(response => {
           const options = {
             size: {

@@ -17,9 +17,7 @@ import com.couclock.portfolio.entity.PortfolioHistory;
 import com.couclock.portfolio.entity.PortfolioPeriod;
 import com.couclock.portfolio.entity.PortfolioStatistic;
 import com.couclock.portfolio.entity.PortfolioStatus;
-import com.couclock.portfolio.entity.StockDistribution;
 import com.couclock.portfolio.entity.StockHistory;
-import com.couclock.portfolio.entity.strategies.AcceleratedMomentumStrategy;
 import com.couclock.portfolio.entity.sub.PortfolioBuyEvent;
 import com.couclock.portfolio.entity.sub.PortfolioEvent;
 import com.couclock.portfolio.entity.sub.PortfolioEvent.EVENT_TYPE;
@@ -154,17 +152,9 @@ public class PortfolioService {
 				}) //
 				.collect(Collectors.toList());
 
-		AcceleratedMomentumStrategy strategyParameters = (AcceleratedMomentumStrategy) portfolio.strategyParameters;
-
 		Map<String, Map<LocalDate, StockHistory>> stock2H = new HashMap<>();
-		for (StockDistribution oneStock : strategyParameters.usStocks) {
-			stock2H.put(oneStock.stockCode, stockHistoryService.getAllByStockCode_Map(oneStock.stockCode));
-		}
-		for (StockDistribution oneStock : strategyParameters.exUsStocks) {
-			stock2H.put(oneStock.stockCode, stockHistoryService.getAllByStockCode_Map(oneStock.stockCode));
-		}
-		for (StockDistribution oneStock : strategyParameters.bondStocks) {
-			stock2H.put(oneStock.stockCode, stockHistoryService.getAllByStockCode_Map(oneStock.stockCode));
+		for (String oneStock : portfolio.strategyParameters.getStockList()) {
+			stock2H.put(oneStock, stockHistoryService.getAllByStockCode_Map(oneStock));
 		}
 
 		portfolio.periods.clear();

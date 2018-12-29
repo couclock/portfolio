@@ -45,14 +45,8 @@ public class StrategyService {
 		List<StockDistribution> bondStocks = strategyParameters.bondStocks;
 
 		Map<String, Map<LocalDate, StockHistory>> stock2H = new HashMap<>();
-		for (StockDistribution oneStock : usStocks) {
-			stock2H.put(oneStock.stockCode, stockHistoryService.getAllByStockCode_Map(oneStock.stockCode));
-		}
-		for (StockDistribution oneStock : exUsStocks) {
-			stock2H.put(oneStock.stockCode, stockHistoryService.getAllByStockCode_Map(oneStock.stockCode));
-		}
-		for (StockDistribution oneStock : bondStocks) {
-			stock2H.put(oneStock.stockCode, stockHistoryService.getAllByStockCode_Map(oneStock.stockCode));
+		for (String oneStock : pf.strategyParameters.getStockList()) {
+			stock2H.put(oneStock, stockHistoryService.getAllByStockCode_Map(oneStock));
 		}
 
 		while (currentDate.isBefore(targetDate)) {

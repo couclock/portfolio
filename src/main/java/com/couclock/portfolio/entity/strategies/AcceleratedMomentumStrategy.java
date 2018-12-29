@@ -2,6 +2,8 @@ package com.couclock.portfolio.entity.strategies;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -32,6 +34,15 @@ public class AcceleratedMomentumStrategy extends StrategyParameters {
 
 	public void addUsStock(double percent, String stockCode) {
 		this.usStocks.add(new StockDistribution(percent, stockCode));
+	}
+
+	@Override
+	public List<String> getStockList() {
+		return Stream.concat( //
+				Stream.concat(this.usStocks.stream(), this.exUsStocks.stream()), //
+				this.bondStocks.stream()) //
+				.map(oneStock -> oneStock.stockCode) //
+				.collect(Collectors.toList());
 	}
 
 }

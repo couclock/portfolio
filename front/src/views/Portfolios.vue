@@ -161,6 +161,7 @@ export default {
       exUsStockCode: undefined,
       bondStockCode: undefined,
       actionsDisabled: false,
+
       showSnackbar: false,
       snackbarMessage: ""
     };
@@ -178,7 +179,7 @@ export default {
     addPortfolio() {
       console.log("addPortfolio");
       HTTP.post(
-        "/strategies/" +
+        "/portfolios/" +
           this.newPFCode +
           "/" +
           this.usStockCode +
@@ -200,14 +201,14 @@ export default {
       });
     },
     loadPortfolioList() {
-      HTTP.get("/strategies/").then(response => {
+      HTTP.get("/portfolios/").then(response => {
         this.portfolioList = response.data;
         this.actionsDisabled = false;
       });
     },
     processStrategy(currentPFCode) {
       this.actionsDisabled = true;
-      HTTP.post("/strategies/" + currentPFCode + "/process").then(response => {
+      HTTP.post("/portfolios/" + currentPFCode + "/process").then(response => {
         this.snackbarMessage =
           "Your portfolio has been successfully processed ! ";
         this.showSnackbar = true;
@@ -216,7 +217,7 @@ export default {
     },
     resetPortfolioBacktest(currentPFCode) {
       this.actionsDisabled = true;
-      HTTP.post("/strategies/" + currentPFCode + "/reset").then(response => {
+      HTTP.post("/portfolios/" + currentPFCode + "/reset").then(response => {
         this.snackbarMessage = "Your portfolio has been successfully reset ! ";
         this.showSnackbar = true;
         this.loadPortfolioList();
@@ -224,7 +225,7 @@ export default {
     },
     deletePortfolio(currentPFCode) {
       this.actionsDisabled = true;
-      HTTP.delete("/strategies/" + currentPFCode).then(response => {
+      HTTP.delete("/portfolios/" + currentPFCode).then(response => {
         this.snackbarMessage =
           "Your portfolio has been successfully deleted ! ";
         this.showSnackbar = true;
