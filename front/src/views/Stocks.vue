@@ -3,11 +3,11 @@
 
     <div class="md-layout md-layout-item md-size-100 md-gutter md-alignment-top-center">
 
-      <div class="md-layout md-layout-item md-size-50">
+      <div class="md-layout md-layout-item md-size-80">
 
         <md-table v-model="stockList"
                   v-if="stockList.length > 0"
-                  md-sort="id"
+                  md-sort="code"
                   md-sort-order="asc"
                   md-card
                   class="md-layout-item md-size-100">
@@ -17,16 +17,20 @@
 
           <md-table-row slot="md-table-row"
                         slot-scope="{ item }">
-            <md-table-cell md-label="ID"
-                           md-numeric
-                           md-sort-by="id">{{ item.id }}</md-table-cell>
             <md-table-cell md-label="Code"
                            md-sort-by="code">
               {{ item.code }}
             </md-table-cell>
             <md-table-cell md-label="Name"
-                           md-sort-by="name">
+                           md-sort-by="name"
+                           class="stock-name">
               {{ item.name }}
+            </md-table-cell>
+            <md-table-cell md-label="Tags">
+              <md-chip v-for="(tag, index) in item.tags"
+                       :key="index">
+                {{ tag }}
+              </md-chip>
             </md-table-cell>
             <md-table-cell md-label="Last date">
               <span v-if="lastHistory[item.code]">{{ lastHistory[item.code].date }}</span>
@@ -78,11 +82,16 @@
           </md-card-header>
           <md-card-content>
 
-            <div class="md-layout">
+            <div class="md-layout md-gutter">
               <md-field class="md-layout-item">
                 <label>New stock code</label>
                 <md-input v-model="newStockCode"></md-input>
               </md-field>
+              <div class="md-layout-item md-size-5">
+              </div>
+              <md-chips class="md-layout-item"
+                        v-model="newStockTags"
+                        md-placeholder="Add tag..."></md-chips>
 
             </div>
 
@@ -126,7 +135,9 @@ export default {
       actionsDisabled: false,
       showSnackbar: false,
       snackbarMessage: "",
-      newStockCode: undefined
+
+      newStockCode: undefined,
+      newStockTags: []
     };
   },
 
@@ -135,7 +146,7 @@ export default {
       HTTP.get("/stocks/").then(response => {
         this.stockList = response.data;
         this.actionsDisabled = false;
-        console.log("lastHistory : ", this.loadLastHistory());
+        this.loadLastHistory();
       });
     },
     updateStocks() {
@@ -144,11 +155,16 @@ export default {
       });
     },
     addStock() {
-      HTTP.post("/stocks/" + this.newStockCode)
+      HTTP.post("/stocks", {
+        code: this.newStockCode,
+        tags: this.newStockTags
+      })
         .then(() => {
           this.snackbarMessage = "Your stock has been successfully added ! ";
           this.showSnackbar = true;
           this.loadStockList();
+          this.newStockCode = undefined;
+          this.newStockTags = [];
         })
         .catch(response => {
           console.error("ERROR : ", response);
@@ -211,4 +227,7 @@ export default {
 </script>
 
 <style scoped>
+.stock-name {
+  text-align: left;
+}
 </style>

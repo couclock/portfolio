@@ -2,6 +2,7 @@ package com.couclock.portfolio.service;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -65,27 +66,25 @@ public class YahooService {
 		if (histories != null) {
 			histories.forEach(oneDay -> {
 
-				log.info("Handling : " + oneDay.getDate().getTime().toGMTString());
+				LocalDate localDate = new java.sql.Date(oneDay.getDate().getTime().getTime()).toLocalDate();
 
 				// Skip incomplete data
 				if (oneDay.getDate() == null || oneDay.getOpen() == null || oneDay.getClose() == null
 						|| oneDay.getHigh() == null || oneDay.getLow() == null || oneDay.getVolume() == null) {
-					log.info("Skipping (null) !");
+					log.info("Skipping " + DateTimeFormatter.ISO_LOCAL_DATE.format(localDate) + " (null) !");
 					return;
 				}
 				// Skip invalid data
 				if (oneDay.getOpen().doubleValue() == 0 && oneDay.getClose().doubleValue() == 0
 						&& oneDay.getHigh().doubleValue() == 0 && oneDay.getLow().doubleValue() == 0
 						&& oneDay.getVolume().longValue() == 0) {
-					log.info("Skipping (0) !");
+					log.info("Skipping " + DateTimeFormatter.ISO_LOCAL_DATE.format(localDate) + " (0) !");
 					return;
 				}
 
-				LocalDate lDate = new java.sql.Date(oneDay.getDate().getTime().getTime()).toLocalDate();
-
 				// Skip known history
-				if (date2History.containsKey(lDate)) {
-					log.info("Skipping (known) !");
+				if (date2History.containsKey(localDate)) {
+					log.info("Skipping " + DateTimeFormatter.ISO_LOCAL_DATE.format(localDate) + " (known) !");
 
 					return;
 				}
@@ -94,7 +93,7 @@ public class YahooService {
 
 				StockHistory newStockHistory = new StockHistory();
 				newStockHistory.stock = stock;
-				newStockHistory.date = lDate;
+				newStockHistory.date = localDate;
 				newStockHistory.open = oneDay.getOpen().doubleValue();
 				newStockHistory.high = oneDay.getHigh().doubleValue();
 				newStockHistory.low = oneDay.getLow().doubleValue();

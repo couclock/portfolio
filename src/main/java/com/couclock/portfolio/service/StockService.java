@@ -22,6 +22,27 @@ public class StockService {
 	@Autowired
 	private StockRepository stockRepository;
 
+	public void addOne(FinStock newStock) throws Exception {
+
+		Stock stock = null;
+		try {
+			stock = YahooFinance.get(newStock.code.toUpperCase() + ".PA");
+		} catch (Exception e) {
+			throw new Exception("Invalid stock code");
+		} finally {
+			if (!stock.isValid()) {
+				throw new Exception("Invalid stock code");
+			}
+		}
+
+		newStock.code = newStock.code.toUpperCase();
+		newStock.name = stock.getName();
+		newStock.currency = stock.getCurrency();
+		newStock.stockExchange = stock.getStockExchange();
+
+		this.upsert(newStock);
+	}
+
 	public void addStock(String stockCode) throws Exception {
 
 		Stock stock = null;
@@ -78,6 +99,7 @@ public class StockService {
 			existing.name = stock.name;
 			existing.description = stock.description;
 			existing.stockExchange = stock.stockExchange;
+			existing.tags = stock.tags;
 			stockRepository.save(existing);
 		}
 

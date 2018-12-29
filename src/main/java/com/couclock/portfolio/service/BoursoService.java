@@ -50,11 +50,9 @@ public class BoursoService {
 
 				LocalDate curDate = LocalDate.parse("1970-01-01").plusDays(oneDay.d);
 
-				log.info("Handling : " + curDate);
-
 				// Skip known history
 				if (date2History.containsKey(curDate)) {
-					log.info("Skipping (known) !");
+					log.info("Skipping " + curDate + " (known) !");
 
 					return;
 				}

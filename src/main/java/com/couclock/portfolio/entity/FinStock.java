@@ -1,7 +1,9 @@
 package com.couclock.portfolio.entity;
 
 import java.io.Serializable;
+import java.util.List;
 
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -28,5 +30,8 @@ public class FinStock implements Serializable {
 	public String description;
 	public String currency;
 	public String stockExchange;
+
+	@ElementCollection
+	public List<String> tags;
 
 }
