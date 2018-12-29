@@ -18,6 +18,7 @@ import com.couclock.portfolio.entity.PortfolioPeriod;
 import com.couclock.portfolio.entity.PortfolioStatistic;
 import com.couclock.portfolio.entity.PortfolioStatus;
 import com.couclock.portfolio.entity.StockHistory;
+import com.couclock.portfolio.entity.strategies.AcceleratedMomentumStrategy;
 import com.couclock.portfolio.entity.sub.PortfolioBuyEvent;
 import com.couclock.portfolio.entity.sub.PortfolioEvent;
 import com.couclock.portfolio.entity.sub.PortfolioEvent.EVENT_TYPE;
@@ -39,6 +40,9 @@ public class PortfolioService {
 	private StockHistoryService stockHistoryService;
 
 	@Autowired
+	private StockService stockService;
+
+	@Autowired
 	private PortfolioRepository portfolioRepository;
 
 	@Autowired
@@ -49,6 +53,54 @@ public class PortfolioService {
 		if (pf != null) {
 			portfolioRepository.delete(pf);
 		}
+	}
+
+	/**
+	 * Generate all possible portfolio for Accelerated Momentum strategy using
+	 * existing stocks
+	 *
+	 * @throws Exception
+	 */
+	public void generatePortfolios() throws Exception {
+
+		List<String> usStocks = stockService.findByTag("US").stream() //
+				.map(oneStock -> oneStock.code) //
+				.collect(Collectors.toList());
+
+		List<String> exUsStocks = stockService.findByTag("ExUS").stream() //
+				.map(oneStock -> oneStock.code) //
+				.collect(Collectors.toList());
+
+		List<String> bondStocks = stockService.findByTag("Bond").stream() //
+				.map(oneStock -> oneStock.code) //
+				.collect(Collectors.toList());
+
+		for (String oneBondStock : bondStocks) {
+			for (String oneExUsStock : exUsStocks) {
+				for (String oneUsStock : usStocks) {
+					String pfCode = oneUsStock + "_" + oneExUsStock + "_" + oneBondStock;
+
+					Portfolio portfolio = getByPortfolioCode(pfCode);
+					if (portfolio != null) {
+						continue;
+					} else {
+						portfolio = new Portfolio();
+					}
+					portfolio.code = pfCode;
+
+					this.initPortfolio(portfolio);
+
+					AcceleratedMomentumStrategy strategyParameters = new AcceleratedMomentumStrategy();
+					strategyParameters.addUsStock(1, oneUsStock);
+					strategyParameters.addExUsStock(1, oneExUsStock);
+					strategyParameters.addBondStock(1, oneBondStock);
+					portfolio.strategyParameters = strategyParameters;
+
+					this.upsert(portfolio);
+				}
+			}
+		}
+
 	}
 
 	public List<Portfolio> getAll() {

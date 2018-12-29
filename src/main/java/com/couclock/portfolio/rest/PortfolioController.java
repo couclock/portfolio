@@ -1,6 +1,5 @@
 package com.couclock.portfolio.rest;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.couclock.portfolio.entity.Portfolio;
 import com.couclock.portfolio.entity.PortfolioHistory;
-import com.couclock.portfolio.entity.PortfolioStatus;
 import com.couclock.portfolio.entity.strategies.AcceleratedMomentumStrategy;
 import com.couclock.portfolio.entity.sub.PortfolioEvent;
 import com.couclock.portfolio.service.PortfolioService;
@@ -40,13 +38,9 @@ public class PortfolioController {
 		} else {
 			portfolio = new Portfolio();
 			portfolio.code = newPortfolio.code;
-			portfolio.startDate = LocalDate.parse("2010-01-01");
-			portfolio.startMoney = portfolio.endMoney = 10000;
-			portfolio.addAddMoneyEvent(portfolio.startDate, portfolio.startMoney);
-			portfolio.currentStatus = new PortfolioStatus();
-			portfolio.currentStatus.money = portfolio.startMoney;
-			portfolio.endDate = portfolio.startDate;
 			portfolio.strategyParameters = newPortfolio.strategyParameters;
+
+			portfolioService.initPortfolio(portfolio);
 
 			portfolioService.upsert(portfolio);
 
@@ -69,12 +63,9 @@ public class PortfolioController {
 		} else {
 			portfolio = new Portfolio();
 			portfolio.code = portfolioCode;
-			portfolio.startDate = LocalDate.parse("2010-01-01");
-			portfolio.startMoney = portfolio.endMoney = 10000;
-			portfolio.addAddMoneyEvent(portfolio.startDate, portfolio.startMoney);
-			portfolio.currentStatus = new PortfolioStatus();
-			portfolio.currentStatus.money = portfolio.startMoney;
-			portfolio.endDate = portfolio.startDate;
+
+			portfolioService.initPortfolio(portfolio);
+
 			AcceleratedMomentumStrategy strategyParameters = new AcceleratedMomentumStrategy();
 			strategyParameters.addUsStock(1, usStockCode);
 			strategyParameters.addExUsStock(1, exUsStockCode);
@@ -94,6 +85,14 @@ public class PortfolioController {
 
 		portfolioService.deleteByPortfolioCode(portfolioCode);
 
+		return "ok";
+
+	}
+
+	@RequestMapping("/generate")
+	public String generate() throws Exception {
+
+		portfolioService.generatePortfolios();
 		return "ok";
 
 	}

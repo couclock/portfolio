@@ -79,6 +79,11 @@ public class StockService {
 
 	}
 
+	public List<FinStock> findByTag(String tag) {
+		return stockRepository.findByTagsIgnoreCase(tag);
+
+	}
+
 	public List<FinStock> getAll() {
 		return stockRepository.findAll().stream() //
 				.sorted((stock1, stock2) -> stock1.code.compareTo(stock2.code)) //

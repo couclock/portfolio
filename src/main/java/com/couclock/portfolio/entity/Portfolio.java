@@ -9,6 +9,7 @@ import javax.persistence.CascadeType;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -64,12 +65,12 @@ public class Portfolio implements Serializable {
 	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
 	public StrategyParameters strategyParameters;
 
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "portfolio_code", referencedColumnName = "code")
 	@JsonIgnore
 	public List<PortfolioEvent> events = new ArrayList<>();
 
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "portfolio_code", referencedColumnName = "code")
 	@JsonIgnore
 	public List<PortfolioHistory> history = new ArrayList<>();
