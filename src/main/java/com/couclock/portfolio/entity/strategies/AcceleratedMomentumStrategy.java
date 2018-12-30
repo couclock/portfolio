@@ -20,6 +20,8 @@ public class AcceleratedMomentumStrategy extends StrategyParameters {
 	@ElementCollection
 	public List<StockDistribution> bondStocks = new ArrayList<>();
 
+	public STRATEGY strategy = STRATEGY.ACCELERATED_MOMENTUM;
+
 	public AcceleratedMomentumStrategy() {
 		this.strategy = STRATEGY.ACCELERATED_MOMENTUM;
 	}

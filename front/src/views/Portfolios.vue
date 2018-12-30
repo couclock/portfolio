@@ -62,76 +62,7 @@
     </div>
 
     <!-- Add form line -->
-    <div class="md-layout md-gutter md-layout-item md-alignment-top-center">
-      <div class="md-layout-item md-size-50">
-
-        <md-card>
-          <md-card-header>
-            <div class="md-title">Add a portfolio</div>
-          </md-card-header>
-          <md-card-content>
-
-            <div class="md-layout">
-              <md-field class="md-layout-item">
-                <label>New portfolio code</label>
-                <md-input v-model="newPFCode"></md-input>
-              </md-field>
-              <div class="md-layout-item md-size-5">
-              </div>
-              <md-field class="md-layout-item">
-                <label for="usStock">
-                  US stock
-                </label>
-                <md-select v-model="usStockCode"
-                           md-dense
-                           name="usStock"
-                           id="usStock">
-                  <md-option v-for="stock in stockList"
-                             :key="stock.id"
-                             :value="stock.code">
-                    {{ stock.code }}
-                  </md-option>
-                </md-select>
-              </md-field>
-
-            </div>
-
-            <div class="md-layout">
-
-              <md-field  class="md-layout-item">
-                <label for="exUsStock">Ex-US stock</label>
-                <md-select v-model="exUsStockCode"
-                           md-dense
-                           name="exUsStock"
-                           id="exUsStock">
-                  <md-option v-for="stock in stockList"
-                             :key="stock.id"
-                             :value="stock.code">{{ stock.code}}</md-option>
-                </md-select>
-              </md-field>
-              <div class="md-layout-item md-size-5">
-              </div>
-              <md-field  class="md-layout-item">
-                <label for="bondStock">Bond stock</label>
-                <md-select v-model="bondStockCode"
-                           md-dense
-                           name="bondStock"
-                           id="bondStock">
-                  <md-option v-for="stock in stockList"
-                             :key="stock.id"
-                             :value="stock.code">{{ stock.code}}</md-option>
-                </md-select>
-              </md-field>
-            </div>
-            <div class="md-layout md-alignment-top-center">
-              <md-button class="md-raised md-primary"
-                         @click="addPortfolio">Add portfolio</md-button>
-            </div>
-
-          </md-card-content>
-        </md-card>
-      </div>
-    </div>
+    <portfolio-form @portfolioAdded="portfolioAddedEventHandler"></portfolio-form>
     <!-- end Add form line -->
 
     <md-snackbar md-position="center"
@@ -147,6 +78,7 @@
 <script>
 import { HTTP } from "@/http-constants";
 import Vue from "vue";
+import portfolioForm from "@/components/PortfolioForm.vue";
 
 export default {
   name: "portfolios",
@@ -154,12 +86,6 @@ export default {
     return {
       portfolioList: [],
 
-      // Add portfolio related vars
-      stockList: [],
-      newPFCode: undefined,
-      usStockCode: undefined,
-      exUsStockCode: undefined,
-      bondStockCode: undefined,
       actionsDisabled: false,
 
       showSnackbar: false,
@@ -176,29 +102,10 @@ export default {
     }
   },
   methods: {
-    addPortfolio() {
-      console.log("addPortfolio");
-      HTTP.post(
-        "/portfolios/" +
-          this.newPFCode +
-          "/" +
-          this.usStockCode +
-          "/" +
-          this.exUsStockCode +
-          "/" +
-          this.bondStockCode
-      ).then(response => {
-        this.loadPortfolioList();
-        this.newPFCode = undefined;
-        this.usStockCode = undefined;
-        this.exUsStockCode = undefined;
-        this.bondStockCode = undefined;
-      });
-    },
-    loadStockList() {
-      HTTP.get("/stocks/").then(response => {
-        this.stockList = response.data;
-      });
+    portfolioAddedEventHandler() {
+      this.snackbarMessage = "Your portfolio has been successfully created ! ";
+      this.showSnackbar = true;
+      this.loadPortfolioList();
     },
     loadPortfolioList() {
       HTTP.get("/portfolios/").then(response => {
@@ -235,10 +142,10 @@ export default {
   },
   created() {
     this.loadPortfolioList();
-    this.loadStockList();
   },
-  mounted() {},
-  components: {}
+  components: {
+    portfolioForm
+  }
 };
 </script>
 

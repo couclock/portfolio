@@ -13,6 +13,6 @@ public interface StockRepository extends JpaRepository<FinStock, Long> {
 
 	FinStock findByCodeIgnoreCase(String code);
 
-	List<FinStock> findByTagsIgnoreCase(String tag);
+	List<FinStock> findByTagsIgnoreCaseOrderByCode(String tag);
 
 }

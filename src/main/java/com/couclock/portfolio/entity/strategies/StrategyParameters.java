@@ -14,9 +14,11 @@ import javax.persistence.OneToOne;
 
 import com.couclock.portfolio.entity.Portfolio;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public abstract class StrategyParameters {
 
 	public static enum STRATEGY {
@@ -34,5 +36,10 @@ public abstract class StrategyParameters {
 	@JsonIgnore
 	public Portfolio portfolio;
 
+	public StrategyParameters() {
+
+	}
+
 	public abstract List<String> getStockList();
+
 }

@@ -80,7 +80,7 @@ public class StockService {
 	}
 
 	public List<FinStock> findByTag(String tag) {
-		return stockRepository.findByTagsIgnoreCase(tag);
+		return stockRepository.findByTagsIgnoreCaseOrderByCode(tag);
 
 	}
 

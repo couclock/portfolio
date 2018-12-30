@@ -102,11 +102,17 @@ public class StrategyService {
 						.filter(oneStockToBuy -> stock2H.get(oneStockToBuy.stockCode).containsKey(curDate)) //
 						.collect(Collectors.toList());
 
+				if (stockToBuyToday.size() != pfStatus.toBuy.size()) {
+					log.error("Stock distribution will be invalid ...");
+				}
+
+				final double moneyToBuy = pfStatus.money;
+
 				stockToBuyToday.forEach(oneStockToBuy -> {
 					StockHistory oneHistory = stock2H.get(oneStockToBuy.stockCode).get(curDate);
 					log.info("toBuy stock history : " + oneHistory);
 
-					long count = Math.round(Math.floor((pfStatus.money * oneStockToBuy.percent) / oneHistory.open));
+					long count = Math.round(Math.floor((moneyToBuy * oneStockToBuy.percent) / oneHistory.open));
 					if (count > 0) {
 						pfStatus.addStock(count, oneStockToBuy.stockCode);
 						pfStatus.money -= count * oneHistory.open;

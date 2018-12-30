@@ -75,6 +75,11 @@ public class StockController {
 
 	}
 
+	@RequestMapping("/by-tag/{tag}")
+	public List<FinStock> getByTag(@PathVariable(value = "tag") String tag) {
+		return stockService.findByTag(tag);
+	}
+
 	@RequestMapping("/{stockCode}")
 	public FinStock getOne(@PathVariable(value = "stockCode") String stockCode) {
 

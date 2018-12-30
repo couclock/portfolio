@@ -159,7 +159,7 @@ import { HTTP } from "@/http-constants";
 import router from "vue-router";
 
 export default {
-  name: "home",
+  name: "PortfolioDetail",
   data() {
     return {
       handler: new Vue(),
