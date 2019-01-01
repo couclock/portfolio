@@ -44,7 +44,7 @@
             {{ stat.stockCode }} : {{ 100 * stat.performance | formatNb }} % ({{ stat.dayCount }} days)
           </div>
           <div class="md-layout">
-            {{ currentPortfolio.endStatus | pretty}}
+            {{ currentPortfolio.currentStatus | pretty}}
           </div>
 
         </div>
@@ -154,6 +154,7 @@
 <script>
 import Vue from "vue";
 import find from "lodash/find";
+import reverse from "lodash/reverse";
 import VueC3 from "vue-c3";
 import { HTTP } from "@/http-constants";
 import router from "vue-router";
@@ -192,6 +193,7 @@ export default {
         "code",
         this.currentPFCode
       ]);
+      reverse(this.currentPortfolio.periods);
       this.updateGraph();
       this.loadEvents();
     },
