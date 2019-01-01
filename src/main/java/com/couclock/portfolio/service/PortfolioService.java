@@ -119,7 +119,7 @@ public class PortfolioService {
 	}
 
 	public Portfolio initPortfolio(Portfolio portfolio) {
-		portfolio.startDate = LocalDate.parse("2010-01-01");
+		portfolio.startDate = LocalDate.parse("2016-01-01");
 		portfolio.startMoney = 10000;
 		portfolio.events.clear();
 		portfolio.history.clear();
