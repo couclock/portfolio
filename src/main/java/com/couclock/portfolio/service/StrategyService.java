@@ -263,6 +263,8 @@ public class StrategyService {
 			}
 		}
 
+		// log.info("getTodayHistory(" + curDate + ") : " + dayValue + "#" + allFound);
+
 		if (allFound) {
 			return new PortfolioHistory(curDate, dayValue);
 		} else {
