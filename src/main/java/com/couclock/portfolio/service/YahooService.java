@@ -105,9 +105,10 @@ public class YahooService {
 			});
 		}
 
-		log.warn("toImport count : " + toImport.size());
+		log.warn("Stock History toImport count : " + toImport.size());
 
 		stockHistoryService.createBatch(toImport);
+		log.warn("Done !");
 
 	}
 

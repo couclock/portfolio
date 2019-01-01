@@ -17,6 +17,7 @@ import com.couclock.portfolio.entity.StockHistory;
 import com.couclock.portfolio.service.BoursoService;
 import com.couclock.portfolio.service.QuandlService;
 import com.couclock.portfolio.service.StockHistoryService;
+import com.couclock.portfolio.service.StockIndicatorService;
 import com.couclock.portfolio.service.StockService;
 import com.couclock.portfolio.service.YahooService;
 
@@ -36,6 +37,9 @@ public class StockController {
 
 	@Autowired
 	private StockService stockService;
+
+	@Autowired
+	private StockIndicatorService stockIndicatorService;
 
 	@Autowired
 	private StockHistoryService stockHistoryService;
@@ -145,9 +149,13 @@ public class StockController {
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/{stockCode}/update_bourso")
-	public void updateOne_bourso(@PathVariable(value = "stockCode") String stockCode) throws IOException {
+	public String updateOne_bourso(@PathVariable(value = "stockCode") String stockCode) throws IOException {
 
 		boursoService.getStockHistory(stockCode);
+
+		stockIndicatorService.updateIndicators(stockCode, true);
+
+		return "ok";
 
 	}
 
@@ -161,11 +169,13 @@ public class StockController {
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/{stockCode}/update")
-	public List<StockHistory> updateOne_yahoo(@PathVariable(value = "stockCode") String stockCode) throws IOException {
+	public String updateOne_yahoo(@PathVariable(value = "stockCode") String stockCode) throws IOException {
 
 		yahooService.updateOneStockHistory(stockCode, false);
 
-		return stockHistoryService.getAllByStockCode(stockCode);
+		stockIndicatorService.updateIndicators(stockCode, false);
+
+		return "ok";
 
 	}
 }

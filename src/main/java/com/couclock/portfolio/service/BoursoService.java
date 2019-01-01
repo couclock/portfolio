@@ -71,7 +71,7 @@ public class BoursoService {
 			});
 		}
 
-		log.warn("toImport count : " + toImport.size());
+		log.warn("Stock History toImport count : " + toImport.size());
 
 		stockHistoryService.createBatch(toImport);
 

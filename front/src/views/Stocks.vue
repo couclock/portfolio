@@ -183,21 +183,33 @@ export default {
     },
     updateStock_yahoo(stockCode) {
       this.actionsDisabled = true;
-      HTTP.post("/stocks/" + stockCode + "/update").then(response => {
-        this.snackbarMessage =
-          "Your stock history has been successfully updated ! ";
-        this.showSnackbar = true;
-        this.loadStockList();
-      });
+      HTTP.post("/stocks/" + stockCode + "/update")
+        .then(response => {
+          this.snackbarMessage =
+            "Your stock history has been successfully updated ! ";
+          this.showSnackbar = true;
+          this.loadStockList();
+        })
+        .catch(response => {
+          this.snackbarMessage = "ERROR : " + response;
+          this.showSnackbar = true;
+          this.actionsDisabled = false;
+        });
     },
     updateStock_bourso(stockCode) {
       this.actionsDisabled = true;
-      HTTP.post("/stocks/" + stockCode + "/update_bourso").then(response => {
-        this.snackbarMessage =
-          "Your stock history has been successfully updated ! ";
-        this.showSnackbar = true;
-        this.loadStockList();
-      });
+      HTTP.post("/stocks/" + stockCode + "/update_bourso")
+        .then(response => {
+          this.snackbarMessage =
+            "Your stock history has been successfully updated ! ";
+          this.showSnackbar = true;
+          this.loadStockList();
+        })
+        .catch(response => {
+          this.snackbarMessage = "ERROR : " + response;
+          this.showSnackbar = true;
+          this.actionsDisabled = false;
+        });
     },
 
     resetStockHistory(stockCode) {

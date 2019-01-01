@@ -13,7 +13,7 @@ import javax.persistence.ManyToOne;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-public class StockHistory implements Comparable<StockHistory> {
+public class StockIndicator {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -25,22 +25,17 @@ public class StockHistory implements Comparable<StockHistory> {
 	public FinStock stock;
 
 	public LocalDate date;
-	public double open;
-	public double close;
-	public double low;
-	public double high;
 
-	public long volume;
+	public double perf1Month;
+	public double perf3Months;
+	public double perf6Months;
 
-	@Override
-	public int compareTo(StockHistory o) {
-		return o.date.compareTo(this.date);
-	}
+	public double ema6Months;
 
 	@Override
 	public String toString() {
-		return String.format("StockHistory [id=%s, stock=%s, date=%s, open=%s, close=%s, low=%s, high=%s, volume=%s]",
-				id, stock.code, date, open, close, low, high, volume);
+		return String.format("StockIndicator [id=%s, stock=%s, date=%s, perf1Month=%s, perf3Months=%s, perf6Months=%s]",
+				id, stock, date, perf1Month, perf3Months, perf6Months);
 	}
 
 }

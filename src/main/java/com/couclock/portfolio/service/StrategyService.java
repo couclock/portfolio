@@ -17,6 +17,7 @@ import com.couclock.portfolio.entity.PortfolioStatus;
 import com.couclock.portfolio.entity.PortfolioStatus.MyCurrentStock;
 import com.couclock.portfolio.entity.StockDistribution;
 import com.couclock.portfolio.entity.StockHistory;
+import com.couclock.portfolio.entity.StockIndicator;
 import com.couclock.portfolio.entity.strategies.AcceleratedMomentumStrategy;
 
 /**
@@ -32,10 +33,13 @@ public class StrategyService {
 	@Autowired
 	private StockHistoryService stockHistoryService;
 
+	@Autowired
+	private StockIndicatorService stockIndicatorService;
+
 	public Portfolio acceleratedDualMomentum(Portfolio pf) throws Exception {
 
 		LocalDate currentDate = LocalDate.from(pf.endDate);
-		LocalDate targetDate = LocalDate.now();
+		LocalDate targetDate = LocalDate.now().plusDays(1); // To stop loop after considering today
 		PortfolioStatus pfStatus = pf.currentStatus;
 
 		AcceleratedMomentumStrategy strategyParameters = (AcceleratedMomentumStrategy) pf.strategyParameters;
@@ -45,9 +49,11 @@ public class StrategyService {
 		List<StockDistribution> bondStocks = strategyParameters.bondStocks;
 
 		Map<String, Map<LocalDate, StockHistory>> stock2H = new HashMap<>();
-		for (String oneStock : pf.strategyParameters.getStockList()) {
+		Map<String, Map<LocalDate, StockIndicator>> stock2I = new HashMap<>();
+		pf.strategyParameters.getStockList().forEach(oneStock -> {
 			stock2H.put(oneStock, stockHistoryService.getAllByStockCode_Map(oneStock));
-		}
+			stock2I.put(oneStock, stockIndicatorService.getAllByStockCode_Map(oneStock));
+		});
 
 		while (currentDate.isBefore(targetDate)) {
 
@@ -56,8 +62,8 @@ public class StrategyService {
 			// On month last day, calculate momentums
 			if (monthLastDay) {
 
-				List<StockDistribution> targetStocks = getToBuyStockOnNextMonthStart(currentDate, stock2H, usStocks,
-						exUsStocks, bondStocks);
+				List<StockDistribution> targetStocks = getToBuyStockOnNextMonthStart(currentDate, stock2H, stock2I,
+						usStocks, exUsStocks, bondStocks);
 				targetStocks.forEach(oneTargetStock -> {
 					pfStatus.toSell.remove(oneTargetStock.stockCode);
 				});
@@ -77,6 +83,9 @@ public class StrategyService {
 				log.info("Selected targetStock for next month [" + currentDate + "] : " + targetStocks);
 
 			}
+
+			// Check protection rules
+			checkProtectionRules(currentDate, pfStatus, stock2H, stock2I);
 
 			final LocalDate curDate = currentDate;
 
@@ -144,10 +153,49 @@ public class StrategyService {
 	}
 
 	/**
+	 * Check if current portfolio contains only stocks validating protection rules
+	 *
+	 * @param curDate
+	 * @param pfStatus
+	 * @param stock2h
+	 * @param stock2i
+	 */
+	private void checkProtectionRules(LocalDate curDate, PortfolioStatus pfStatus,
+			Map<String, Map<LocalDate, StockHistory>> stock2h, Map<String, Map<LocalDate, StockIndicator>> stock2i) {
+
+		pfStatus.currentStocks.forEach(oneStock -> {
+			if (stock2h.containsKey(oneStock.stockCode) && stock2h.get(oneStock.stockCode).containsKey(curDate)
+					&& stock2i.containsKey(oneStock.stockCode)
+					&& stock2i.get(oneStock.stockCode).containsKey(curDate)) {
+				StockHistory stockHistory = stock2h.get(oneStock.stockCode).get(curDate);
+				StockIndicator stockIndicator = stock2i.get(oneStock.stockCode).get(curDate);
+
+				// Rule 1 : Do not keep stock closing under its ema - months
+				if (false && stockHistory.close < stockIndicator.ema6Months * 0.92) {
+
+					log.info("checkProtectionRules : PROTECTION : " + oneStock.stockCode);
+
+					// Add to toSell list
+					if (!pfStatus.toSell.contains(oneStock.stockCode)) {
+						pfStatus.toSell.add(oneStock.stockCode);
+					}
+					// Remove from toBuy List
+					pfStatus.toBuy = pfStatus.toBuy.stream() //
+							.filter(oneStockToBuy -> {
+								return oneStockToBuy.stockCode == oneStock.stockCode;
+							}) //
+							.collect(Collectors.toList());
+				}
+			}
+		});
+	}
+
+	/**
 	 * Get stocks to buy considering accelerated momentum strategy
 	 *
 	 * @param currentDate Last day of current month
 	 * @param stock2H
+	 * @param stock2i
 	 * @param usStocks
 	 * @param exUsStocks
 	 * @param bondStocks
@@ -155,21 +203,30 @@ public class StrategyService {
 	 * @throws Exception
 	 */
 	private List<StockDistribution> getToBuyStockOnNextMonthStart(LocalDate currentDate,
-			Map<String, Map<LocalDate, StockHistory>> stock2H, List<StockDistribution> usStocks,
-			List<StockDistribution> exUsStocks, List<StockDistribution> bondStocks) throws Exception {
+			Map<String, Map<LocalDate, StockHistory>> stock2H, Map<String, Map<LocalDate, StockIndicator>> stock2i,
+			List<StockDistribution> usStocks, List<StockDistribution> exUsStocks, List<StockDistribution> bondStocks)
+			throws Exception {
 
 		// Get Momentum on exUS stock and on sp500 stock
 		double momentumExUS = 0;
 		for (StockDistribution oneStock : exUsStocks) {
-			momentumExUS += oneStock.percent * (getXMonthPerf(stock2H.get(oneStock.stockCode), currentDate, 1)
-					+ getXMonthPerf(stock2H.get(oneStock.stockCode), currentDate, 3)
-					+ getXMonthPerf(stock2H.get(oneStock.stockCode), currentDate, 6));
+			StockIndicator stockIndicator = stockIndicatorService
+					.findFirstIndicatorBefore(stock2i.get(oneStock.stockCode), currentDate, currentDate.minusMonths(1));
+
+			if (stockIndicator != null) {
+				momentumExUS += oneStock.percent
+						* (stockIndicator.perf1Month + stockIndicator.perf3Months + stockIndicator.perf6Months);
+			}
+
 		}
 		double momentumUS = 0;
 		for (StockDistribution oneStock : usStocks) {
-			momentumUS += oneStock.percent * (getXMonthPerf(stock2H.get(oneStock.stockCode), currentDate, 1)
-					+ getXMonthPerf(stock2H.get(oneStock.stockCode), currentDate, 3)
-					+ getXMonthPerf(stock2H.get(oneStock.stockCode), currentDate, 6));
+			StockIndicator stockIndicator = stockIndicatorService
+					.findFirstIndicatorBefore(stock2i.get(oneStock.stockCode), currentDate, currentDate.minusMonths(1));
+			if (stockIndicator != null) {
+				momentumUS += oneStock.percent
+						* (stockIndicator.perf1Month + stockIndicator.perf3Months + stockIndicator.perf6Months);
+			}
 		}
 
 		// Set targetStock
@@ -212,33 +269,6 @@ public class StrategyService {
 			return null;
 		}
 
-	}
-
-	/**
-	 * Get Perf for last monthCount months using date as start date
-	 *
-	 * @param allHistories
-	 * @param date
-	 * @param monthCount
-	 * @return
-	 * @throws Exception
-	 */
-	private double getXMonthPerf(Map<LocalDate, StockHistory> allHistories, LocalDate date, int monthCount)
-			throws Exception {
-
-		LocalDate beginDate = date.minusMonths(monthCount);
-		StockHistory endH = stockHistoryService.findFirstHistoryBefore(allHistories, date, beginDate);
-		StockHistory startH = stockHistoryService.findFirstHistoryBefore(allHistories, beginDate,
-				beginDate.minusMonths(monthCount));
-
-		if (endH == null || startH == null) {
-			return -10000;
-		}
-
-		double diff = endH.close - startH.close;
-		double perf = diff / startH.close;
-
-		return perf * 100;
 	}
 
 }

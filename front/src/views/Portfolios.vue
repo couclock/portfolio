@@ -76,6 +76,9 @@
 </template>
 
 <script>
+import findIndex from "lodash/findIndex";
+import remove from "lodash/remove";
+
 import { HTTP } from "@/http-constants";
 import Vue from "vue";
 import portfolioForm from "@/components/PortfolioForm.vue";
@@ -115,19 +118,29 @@ export default {
     },
     processStrategy(currentPFCode) {
       this.actionsDisabled = true;
-      HTTP.post("/portfolios/" + currentPFCode + "/process").then(response => {
-        this.snackbarMessage =
-          "Your portfolio has been successfully processed ! ";
-        this.showSnackbar = true;
-        this.loadPortfolioList();
-      });
+      HTTP.post("/portfolios/" + currentPFCode + "/process")
+        .then(response => {
+          let idx = findIndex(this.portfolioList, { code: currentPFCode });
+          this.portfolioList.splice(idx, 1, response.data);
+          this.snackbarMessage =
+            "Your portfolio has been successfully processed ! ";
+          this.showSnackbar = true;
+          this.actionsDisabled = false;
+        })
+        .catch(response => {
+          this.snackbarMessage = "ERROR : " + response;
+          this.showSnackbar = true;
+          this.actionsDisabled = false;
+        });
     },
     resetPortfolioBacktest(currentPFCode) {
       this.actionsDisabled = true;
       HTTP.post("/portfolios/" + currentPFCode + "/reset").then(response => {
         this.snackbarMessage = "Your portfolio has been successfully reset ! ";
         this.showSnackbar = true;
-        this.loadPortfolioList();
+        let idx = findIndex(this.portfolioList, { code: currentPFCode });
+        this.portfolioList.splice(idx, 1, response.data);
+        this.actionsDisabled = false;
       });
     },
     deletePortfolio(currentPFCode) {
@@ -136,7 +149,8 @@ export default {
         this.snackbarMessage =
           "Your portfolio has been successfully deleted ! ";
         this.showSnackbar = true;
-        this.loadPortfolioList();
+        remove(this.portfolioList, { code: currentPFCode });
+        this.actionsDisabled = false;
       });
     }
   },
