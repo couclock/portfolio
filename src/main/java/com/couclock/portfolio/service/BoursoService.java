@@ -1,6 +1,7 @@
 package com.couclock.portfolio.service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -42,8 +43,6 @@ public class BoursoService {
 
 		Map<LocalDate, StockHistory> date2History = stockHistoryService.getAllByStockCode_Map(stockCode);
 
-		log.info("data bourso : " + histories);
-
 		List<StockHistory> toImport = new ArrayList<>();
 		if (histories != null) {
 			histories.d.QuoteTab.forEach(oneDay -> {
@@ -52,10 +51,13 @@ public class BoursoService {
 
 				// Skip known history
 				if (date2History.containsKey(curDate)) {
-					log.info("Skipping " + curDate + " (known) !");
+					log.debug("Skipping " + curDate + " (known) !");
 
 					return;
 				}
+
+				log.info("toImport " + DateTimeFormatter.ISO_LOCAL_DATE.format(curDate) + " " + oneDay.o + " / "
+						+ oneDay.c + " / " + oneDay.v);
 
 				StockHistory newStockHistory = new StockHistory();
 				newStockHistory.stock = stock;

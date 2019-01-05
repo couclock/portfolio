@@ -5,6 +5,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -48,6 +49,18 @@ public class PortfolioService {
 	@Autowired
 	private PortfolioEventRepository portfolioEventRepository;
 
+	public void deleteById(long portfolioId) {
+		Optional<Portfolio> pf = portfolioRepository.findById(portfolioId);
+		if (pf.isPresent()) {
+			portfolioRepository.delete(pf.get());
+		}
+	}
+
+	/**
+	 * Delete one portfolio using its code
+	 *
+	 * @param pfCode
+	 */
 	public void deleteByPortfolioCode(String pfCode) {
 		Portfolio pf = portfolioRepository.findByCodeIgnoreCase(pfCode);
 		if (pf != null) {
@@ -114,6 +127,11 @@ public class PortfolioService {
 		return portfolioRepository.findByCodeIgnoreCase(pfCode);
 	}
 
+	public Portfolio getByPortfolioId(long portfolioId) {
+		Optional<Portfolio> pfToReturn = portfolioRepository.findById(portfolioId);
+		return pfToReturn.isPresent() ? pfToReturn.get() : null;
+	}
+
 	public List<PortfolioEvent> getEventsByPortfolioCode(String pfCode) {
 		return portfolioEventRepository.findByPortfolio_CodeOrderByIdDesc(pfCode);
 	}
@@ -143,7 +161,7 @@ public class PortfolioService {
 	 * @param portfolio
 	 * @throws Exception
 	 */
-	public void upsert(Portfolio portfolio) throws Exception {
+	public Portfolio upsert(Portfolio portfolio) throws Exception {
 
 		portfolio.cagr = getCAGR(portfolio);
 		portfolio.ulcerIndex = getUlcerIndex(portfolio);
@@ -151,6 +169,8 @@ public class PortfolioService {
 		processStatistics(portfolio);
 
 		portfolioRepository.save(portfolio);
+
+		return portfolio;
 
 	}
 

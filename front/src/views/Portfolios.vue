@@ -7,13 +7,42 @@
                 v-if="portfolioList.length > 0"
                 md-sort="code"
                 md-sort-order="asc"
-                md-card>
+                md-card
+                ref="pfTable"
+                @md-selected="onPortfolioSelect"
+                :md-selected-value="selectedPortfolios">
         <md-table-toolbar>
           <h1 class="md-title">Portfolios</h1>
         </md-table-toolbar>
 
+        <md-table-toolbar slot="md-table-alternate-header"
+                          slot-scope="{ count }">
+          <div class="md-toolbar-section-start">{{ getAlternateLabel(count) }}</div>
+
+          <div class="md-toolbar-section-end">
+            <md-button class="md-icon-button md-raised"
+                       @click="processPortfolioBacktestMultiple"
+                       :disabled="actionsDisabled">
+              <md-icon>autorenew</md-icon>
+            </md-button>
+            <md-button class="md-icon-button md-raised md-primary"
+                       @click="resetPortfolioBacktestMultiple"
+                       :disabled="actionsDisabled">
+              <md-icon>settings_backup_restore</md-icon>
+            </md-button>
+            <md-button class="md-icon-button md-accent md-raised"
+                       @click="deletePortfolioMultiple"
+                       :disabled="actionsDisabled">
+              <md-icon>delete</md-icon>
+            </md-button>
+
+          </div>
+        </md-table-toolbar>
+
         <md-table-row slot="md-table-row"
-                      slot-scope="{ item }">
+                      slot-scope="{ item }"
+                      md-selectable="multiple"
+                      md-auto-select>
           <md-table-cell md-label="ID"
                          md-numeric
                          md-sort-by="id">{{ item.id }}</md-table-cell>
@@ -36,23 +65,7 @@
                          md-sort-by="cagr">{{ 100 * item.cagr | formatNb }} %</md-table-cell>
           <md-table-cell md-label="Ulcer"
                          md-sort-by="ulcerIndex">{{ item.ulcerIndex | formatNb }} %</md-table-cell>
-          <md-table-cell md-label="Actions">
-            <md-button class="md-icon-button md-dense md-raised"
-                       @click="processStrategy(item.code)"
-                       :disabled="actionsDisabled">
-              <md-icon>autorenew</md-icon>
-            </md-button>
-            <md-button class="md-icon-button md-dense md-raised md-primary"
-                       @click="resetPortfolioBacktest(item.code)"
-                       :disabled="actionsDisabled">
-              <md-icon>settings_backup_restore</md-icon>
-            </md-button>
-            <md-button class="md-icon-button md-dense md-accent md-raised"
-                       @click="deletePortfolio(item.code)"
-                       :disabled="actionsDisabled">
-              <md-icon>delete</md-icon>
-            </md-button>
-          </md-table-cell>
+
         </md-table-row>
       </md-table>
     </div>
@@ -78,6 +91,8 @@
 <script>
 import findIndex from "lodash/findIndex";
 import remove from "lodash/remove";
+import map from "lodash/map";
+import forEach from "lodash/forEach";
 
 import { HTTP } from "@/http-constants";
 import Vue from "vue";
@@ -88,6 +103,7 @@ export default {
   data() {
     return {
       portfolioList: [],
+      selectedPortfolios: [],
 
       actionsDisabled: false,
 
@@ -105,6 +121,19 @@ export default {
     }
   },
   methods: {
+    test() {
+      forEach(this.selectedPortfolios, oneSelectedPortfolio => {
+        this.$refs.pfTable.manageItemSelection(oneSelectedPortfolio);
+      });
+    },
+    onPortfolioSelect(items) {
+      // console.log("onPortfolioSelect : ", items);
+      this.selectedPortfolios = items; //map(items, oneItem => oneItem.id);
+    },
+    getAlternateLabel(count) {
+      let plural = count > 1 ? "s" : "";
+      return count + " portfolio" + plural + " selected";
+    },
     portfolioAddedEventHandler() {
       this.snackbarMessage = "Your portfolio has been successfully created ! ";
       this.showSnackbar = true;
@@ -116,40 +145,66 @@ export default {
         this.actionsDisabled = false;
       });
     },
-    processStrategy(currentPFCode) {
+    handleError(response) {
+      this.snackbarMessage = "ERROR : " + response;
+      this.showSnackbar = true;
+      this.actionsDisabled = false;
+    },
+    processPortfolioBacktestMultiple() {
       this.actionsDisabled = true;
-      HTTP.post("/portfolios/" + currentPFCode + "/process")
+      let portfolioIds = map(
+        this.selectedPortfolios,
+        onePortfolio => onePortfolio.id
+      );
+
+      HTTP.post("/portfolios/process-backtest", portfolioIds)
         .then(response => {
-          let idx = findIndex(this.portfolioList, { code: currentPFCode });
-          this.portfolioList.splice(idx, 1, response.data);
+          forEach(response.data, onePortfolio => {
+            let idx = findIndex(this.portfolioList, { id: onePortfolio.id });
+            this.portfolioList.splice(idx, 1, onePortfolio);
+          });
           this.snackbarMessage =
             "Your portfolio has been successfully processed ! ";
           this.showSnackbar = true;
           this.actionsDisabled = false;
         })
-        .catch(response => {
-          this.snackbarMessage = "ERROR : " + response;
+        .catch(this.handleError);
+    },
+
+    resetPortfolioBacktestMultiple() {
+      this.actionsDisabled = true;
+      let portfolioIds = map(
+        this.selectedPortfolios,
+        onePortfolio => onePortfolio.id
+      );
+
+      HTTP.post("/portfolios/reset-backtest", portfolioIds)
+        .then(response => {
+          forEach(response.data, onePortfolio => {
+            let idx = findIndex(this.portfolioList, { id: onePortfolio.id });
+            this.portfolioList.splice(idx, 1, onePortfolio);
+          });
+          this.snackbarMessage =
+            "Your portfolios have been successfully reset ! ";
           this.showSnackbar = true;
           this.actionsDisabled = false;
-        });
+        })
+        .catch(this.handleError);
     },
-    resetPortfolioBacktest(currentPFCode) {
+    deletePortfolioMultiple() {
       this.actionsDisabled = true;
-      HTTP.post("/portfolios/" + currentPFCode + "/reset").then(response => {
-        this.snackbarMessage = "Your portfolio has been successfully reset ! ";
-        this.showSnackbar = true;
-        let idx = findIndex(this.portfolioList, { code: currentPFCode });
-        this.portfolioList.splice(idx, 1, response.data);
-        this.actionsDisabled = false;
-      });
-    },
-    deletePortfolio(currentPFCode) {
-      this.actionsDisabled = true;
-      HTTP.delete("/portfolios/" + currentPFCode).then(response => {
+      let portfolioIds = map(
+        this.selectedPortfolios,
+        onePortfolio => onePortfolio.id
+      );
+      HTTP.delete("/portfolios", { data: portfolioIds }).then(response => {
         this.snackbarMessage =
-          "Your portfolio has been successfully deleted ! ";
+          "Your portfolios have been successfully deleted ! ";
         this.showSnackbar = true;
-        remove(this.portfolioList, { code: currentPFCode });
+        forEach(this.selectedPortfolios, oneSelectedPortfolio => {
+          remove(this.portfolioList, { id: oneSelectedPortfolio.id });
+          this.$refs.pfTable.manageItemSelection(oneSelectedPortfolio);
+        });
         this.actionsDisabled = false;
       });
     }

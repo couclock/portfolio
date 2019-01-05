@@ -71,25 +71,26 @@ public class YahooService {
 				// Skip incomplete data
 				if (oneDay.getDate() == null || oneDay.getOpen() == null || oneDay.getClose() == null
 						|| oneDay.getHigh() == null || oneDay.getLow() == null || oneDay.getVolume() == null) {
-					log.info("Skipping " + DateTimeFormatter.ISO_LOCAL_DATE.format(localDate) + " (null) !");
+					log.debug("Skipping " + DateTimeFormatter.ISO_LOCAL_DATE.format(localDate) + " (null) !");
 					return;
 				}
 				// Skip invalid data
 				if (oneDay.getOpen().doubleValue() == 0 && oneDay.getClose().doubleValue() == 0
 						&& oneDay.getHigh().doubleValue() == 0 && oneDay.getLow().doubleValue() == 0
 						&& oneDay.getVolume().longValue() == 0) {
-					log.info("Skipping " + DateTimeFormatter.ISO_LOCAL_DATE.format(localDate) + " (0) !");
+					log.debug("Skipping " + DateTimeFormatter.ISO_LOCAL_DATE.format(localDate) + " (0) !");
 					return;
 				}
 
 				// Skip known history
 				if (date2History.containsKey(localDate)) {
-					log.info("Skipping " + DateTimeFormatter.ISO_LOCAL_DATE.format(localDate) + " (known) !");
+					log.debug("Skipping " + DateTimeFormatter.ISO_LOCAL_DATE.format(localDate) + " (known) !");
 
 					return;
 				}
 
-				log.info(oneDay.getOpen() + " / " + oneDay.getClose() + " / " + oneDay.getVolume());
+				log.info("toImport " + DateTimeFormatter.ISO_LOCAL_DATE.format(localDate) + " " + oneDay.getOpen()
+						+ " / " + oneDay.getClose() + " / " + oneDay.getVolume());
 
 				StockHistory newStockHistory = new StockHistory();
 				newStockHistory.stock = stock;

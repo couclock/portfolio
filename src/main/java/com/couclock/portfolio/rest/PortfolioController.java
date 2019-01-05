@@ -1,5 +1,6 @@
 package com.couclock.portfolio.rest;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,10 +81,12 @@ public class PortfolioController {
 
 	}
 
-	@RequestMapping(method = RequestMethod.DELETE, value = "/{portfolioCode}")
-	public String deleteOne(@PathVariable(value = "portfolioCode") String portfolioCode) {
+	@RequestMapping(method = RequestMethod.DELETE)
+	public String delete(@RequestBody List<Long> idList) {
 
-		portfolioService.deleteByPortfolioCode(portfolioCode);
+		idList.forEach(onePortfolioId -> {
+			portfolioService.deleteById(onePortfolioId);
+		});
 
 		return "ok";
 
@@ -121,44 +124,51 @@ public class PortfolioController {
 
 	}
 
-	@RequestMapping(method = RequestMethod.POST, value = "/{portfolioCode}/process")
-	public Portfolio processBacktest(@PathVariable(value = "portfolioCode") String portfolioCode) throws Exception {
+	@RequestMapping(method = RequestMethod.POST, value = "/process-backtest")
+	public List<Portfolio> processBacktest(@RequestBody List<Long> idList) throws Exception {
 
-		Portfolio portfolio = portfolioService.getByPortfolioCode(portfolioCode);
+		List<Portfolio> result = new ArrayList<>();
 
-		if (portfolio != null) {
-			portfolio = strategyService.acceleratedDualMomentum(portfolio);
-		} else {
-			portfolio = new Portfolio();
+		idList.forEach(onePortfolioId -> {
+			Portfolio portfolio = portfolioService.getByPortfolioId(onePortfolioId);
+			try {
+				if (portfolio == null) {
+					throw new Exception("Invalid portfolio id (" + onePortfolioId + ") !");
+				}
+				portfolio = strategyService.acceleratedDualMomentum(portfolio);
+				portfolio = portfolioService.upsert(portfolio);
+			} catch (Exception e) {
+				throw new RuntimeException("ERROR processBacktest", e);
+			}
 
-			portfolio.code = portfolioCode;
+			result.add(portfolio);
+		});
 
-			portfolio = portfolioService.initPortfolio(portfolio);
-
-			portfolio = strategyService.acceleratedDualMomentum(portfolio);
-
-		}
-
-		portfolioService.upsert(portfolio);
-
-		return portfolio;
+		return result;
 
 	}
 
-	@RequestMapping(method = RequestMethod.POST, value = "/{portfolioCode}/reset")
-	public Portfolio resetBacktest(@PathVariable(value = "portfolioCode") String portfolioCode) throws Exception {
+	@RequestMapping(method = RequestMethod.POST, value = "/reset-backtest")
+	public List<Portfolio> resetBacktest(@RequestBody List<Long> idList) throws Exception {
 
-		Portfolio portfolio = portfolioService.getByPortfolioCode(portfolioCode);
+		List<Portfolio> result = new ArrayList<>();
 
-		if (portfolio == null) {
-			throw new Exception("Invalid strategy code !");
-		}
+		idList.forEach(onePortfolioId -> {
+			Portfolio portfolio = portfolioService.getByPortfolioId(onePortfolioId);
+			try {
+				if (portfolio == null) {
+					throw new Exception("Invalid portfolio id (" + onePortfolioId + ") !");
+				}
+				portfolio = portfolioService.initPortfolio(portfolio);
+				portfolio = portfolioService.upsert(portfolio);
+			} catch (Exception e) {
+				throw new RuntimeException("ERROR resetBacktest", e);
+			}
 
-		portfolio = portfolioService.initPortfolio(portfolio);
+			result.add(portfolio);
+		});
 
-		portfolioService.upsert(portfolio);
-
-		return portfolio;
+		return result;
 
 	}
 

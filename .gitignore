@@ -2,6 +2,7 @@
 !.mvn/wrapper/maven-wrapper.jar
 
 /front/node_modules/
+/front/vue-material
 
 ### STS ###
 .apt_generated
@@ -11,6 +12,8 @@
 .settings
 .springBeans
 .sts4-cache
+
+
 
 ### IntelliJ IDEA ###
 .idea
@@ -22,7 +25,7 @@
 /nbproject/private/
 /build/
 /nbbuild/
-/dist/
+**/dist
 /nbdist/
 /.nb-gradle/
 .DS_Store
