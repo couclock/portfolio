@@ -1,18 +1,28 @@
 <template>
   <div class="md-layout md-gutter md-alignment-top-center">
 
-    <div class="md-layout md-layout-item md-size-75 md-alignment-top-center">
+    <div class="md-layout md-layout-item md-size-80 md-alignment-top-center">
 
-      <md-table v-model="portfolioList"
+      <md-table v-model="filteredPortfolioList"
                 v-if="portfolioList.length > 0"
                 md-sort="code"
                 md-sort-order="asc"
                 md-card
                 ref="pfTable"
+                md-fixed-header
+                class="md-layout-item "
                 @md-selected="onPortfolioSelect"
                 :md-selected-value="selectedPortfolios">
         <md-table-toolbar>
-          <h1 class="md-title">Portfolios</h1>
+          <div class="md-toolbar-section-start">
+            <h1 class="md-title">Portfolios ({{filteredPortfolioList.length}})</h1>
+          </div>
+          <md-field md-clearable
+                    class="md-toolbar-section-end">
+            <md-input placeholder="Search by code ..."
+                      v-model="search"
+                      @input="searchOnTable" />
+          </md-field>
         </md-table-toolbar>
 
         <md-table-toolbar slot="md-table-alternate-header"
@@ -93,6 +103,7 @@ import findIndex from "lodash/findIndex";
 import remove from "lodash/remove";
 import map from "lodash/map";
 import forEach from "lodash/forEach";
+import filter from "lodash/filter";
 
 import { HTTP } from "@/http-constants";
 import Vue from "vue";
@@ -103,8 +114,9 @@ export default {
   data() {
     return {
       portfolioList: [],
+      filteredPortfolioList: [],
       selectedPortfolios: [],
-
+      search: undefined,
       actionsDisabled: false,
 
       showSnackbar: false,
@@ -121,13 +133,27 @@ export default {
     }
   },
   methods: {
+    searchOnTable() {
+      if (this.search) {
+        this.filteredPortfolioList = filter(
+          this.portfolioList,
+          onePortfolio => {
+            return onePortfolio.code
+              .toString()
+              .toLowerCase()
+              .includes(this.search.toString().toLowerCase());
+          }
+        );
+      } else {
+        this.filteredPortfolioList = this.portfolioList;
+      }
+    },
     test() {
       forEach(this.selectedPortfolios, oneSelectedPortfolio => {
         this.$refs.pfTable.manageItemSelection(oneSelectedPortfolio);
       });
     },
     onPortfolioSelect(items) {
-      // console.log("onPortfolioSelect : ", items);
       this.selectedPortfolios = items; //map(items, oneItem => oneItem.id);
     },
     getAlternateLabel(count) {
@@ -142,6 +168,7 @@ export default {
     loadPortfolioList() {
       HTTP.get("/portfolios/").then(response => {
         this.portfolioList = response.data;
+        this.filteredPortfolioList = this.portfolioList;
         this.actionsDisabled = false;
       });
     },
@@ -167,6 +194,7 @@ export default {
             "Your portfolio has been successfully processed ! ";
           this.showSnackbar = true;
           this.actionsDisabled = false;
+          this.unselectAllPortfolios();
         })
         .catch(this.handleError);
     },
@@ -188,6 +216,7 @@ export default {
             "Your portfolios have been successfully reset ! ";
           this.showSnackbar = true;
           this.actionsDisabled = false;
+          this.unselectAllPortfolios();
         })
         .catch(this.handleError);
     },
@@ -203,9 +232,14 @@ export default {
         this.showSnackbar = true;
         forEach(this.selectedPortfolios, oneSelectedPortfolio => {
           remove(this.portfolioList, { id: oneSelectedPortfolio.id });
-          this.$refs.pfTable.manageItemSelection(oneSelectedPortfolio);
         });
+        this.unselectAllPortfolios();
         this.actionsDisabled = false;
+      });
+    },
+    unselectAllPortfolios() {
+      forEach(this.selectedPortfolios, oneSelectedPortfolio => {
+        this.$refs.pfTable.manageItemSelection(oneSelectedPortfolio);
       });
     }
   },

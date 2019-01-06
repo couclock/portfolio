@@ -1,39 +1,32 @@
 # front
 
 ## Project setup
+
 ```
 npm install
 ```
 
 ### Compiles and hot-reloads for development
+
 ```
 npm run serve
 ```
 
 ### Compiles and minifies for production
+
 ```
 npm run build
 ```
 
-### Run your tests
-```
-npm run test
-```
+### Dependencies
 
-### Lints and fixes files
-```
-npm run lint
-```
+Embedded Vue Material is not working right with table selection.
+TODO :
 
-### Run your end-to-end tests
 ```
-npm run test:e2e
+cd front
+git clone https://github.com/vuematerial/vue-material.git
+git checkout dev
+yarn build
+cp -r dist/* ../node-modules/vue-material/
 ```
-
-### Run your unit tests
-```
-npm run test:unit
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
