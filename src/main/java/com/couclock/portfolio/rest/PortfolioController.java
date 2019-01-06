@@ -40,6 +40,7 @@ public class PortfolioController {
 			portfolio = new Portfolio();
 			portfolio.code = newPortfolio.code;
 			portfolio.strategyParameters = newPortfolio.strategyParameters;
+			portfolio.strategyParameters.portfolio = portfolio;
 
 			portfolioService.initPortfolio(portfolio);
 
