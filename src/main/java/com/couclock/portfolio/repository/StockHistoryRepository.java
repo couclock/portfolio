@@ -11,10 +11,14 @@ public interface StockHistoryRepository extends JpaRepository<StockHistory, Long
 
 	long deleteByStock_Code(String code);
 
+	long deleteByStock_Id(long stockId);
+
 	StockHistory findByStock_CodeAndDate(String code, LocalDate date);
 
 	List<StockHistory> findByStock_CodeOrderByDateDesc(String code);
 
 	StockHistory findTop1ByStock_CodeOrderByDateDesc(String code);
+
+	StockHistory findTop1ByStock_IdOrderByDateDesc(long stockId);
 
 }

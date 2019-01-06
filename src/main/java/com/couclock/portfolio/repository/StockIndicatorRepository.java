@@ -11,10 +11,14 @@ public interface StockIndicatorRepository extends JpaRepository<StockIndicator, 
 
 	long deleteByStock_Code(String code);
 
+	long deleteByStock_Id(long stockId);
+
 	StockIndicator findByStock_CodeAndDate(String code, LocalDate date);
 
 	List<StockIndicator> findByStock_CodeOrderByDateDesc(String code);
 
 	StockIndicator findTop1ByStock_CodeOrderByDateDesc(String code);
+
+	StockIndicator findTop1ByStock_IdOrderByDateDesc(long stockId);
 
 }

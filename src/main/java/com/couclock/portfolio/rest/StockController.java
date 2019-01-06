@@ -2,6 +2,7 @@ package com.couclock.portfolio.rest;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.couclock.portfolio.dto.LightStockDTO;
 import com.couclock.portfolio.entity.FinStock;
 import com.couclock.portfolio.entity.StockHistory;
 import com.couclock.portfolio.service.BoursoService;
@@ -62,13 +64,14 @@ public class StockController {
 
 	}
 
-	@RequestMapping(method = RequestMethod.DELETE, value = "/{stockCode}")
-	public String deleteOne(@PathVariable(value = "stockCode") String stockCode) {
+	@RequestMapping(method = RequestMethod.DELETE)
+	public List<Long> delete(@RequestBody List<Long> stockIds) {
 
-		this.reset(stockCode);
-		stockService.deleteByCode(stockCode);
+		this.reset(stockIds);
 
-		return "ok";
+		stockIds.forEach(stockService::deleteById);
+
+		return stockIds;
 
 	}
 
@@ -76,6 +79,19 @@ public class StockController {
 	public List<FinStock> getAll() {
 
 		return stockService.getAll();
+
+	}
+
+	@RequestMapping("/light/")
+	public List<LightStockDTO> getAllLight() {
+
+		return stockService.getAll().stream() //
+				.map(oneStock -> {
+					return new LightStockDTO( //
+							oneStock, //
+							stockHistoryService.getLatestHistoryById(oneStock.id), //
+							stockIndicatorService.getLatestIndicatorById(oneStock.id));
+				}).collect(Collectors.toList());
 
 	}
 
@@ -101,7 +117,9 @@ public class StockController {
 	@RequestMapping("/{stockCode}/history/last")
 	public StockHistory getOneLastHistory(@PathVariable(value = "stockCode") String stockCode) {
 
-		return stockHistoryService.getLatestHistory(stockCode);
+		StockHistory stockHistory = stockHistoryService.getLatestHistory(stockCode);
+
+		return stockHistory != null ? stockHistory : new StockHistory();
 
 	}
 
@@ -110,72 +128,99 @@ public class StockController {
 
 		return stockService.findBySubstring(q);
 
-//		Stock stock = YahooFinance.get(q);
-//
-//		FinStock finStock = new FinStock();
-//		finStock.name = stock.getName();
-//		finStock.code = stock.getSymbol();
-//		finStock.currency = stock.getCurrency();
-//		finStock.stockExchange = stock.getStockExchange();
-//
-//		return finStock;
 	}
 
-	@RequestMapping(method = RequestMethod.POST, value = "/{stockCode}/reset")
-	public String reset(@PathVariable(value = "stockCode") String stockCode) {
+	@RequestMapping(method = RequestMethod.POST, value = "/reset-history")
+	public List<LightStockDTO> reset(@RequestBody List<Long> stockIds) {
 
-		stockHistoryService.deleteByStock(stockCode);
+		return stockIds.stream() //
+				.map(oneStockId -> {
+					FinStock stock = stockService.getByStockId(oneStockId);
+					if (stock == null) {
+						throw new RuntimeException("Invalid stock id (" + oneStockId + ") !");
+					}
+					stockHistoryService.deleteByStockId(oneStockId);
+					stockIndicatorService.deleteByStockId(oneStockId);
 
-		return "ok";
+					return new LightStockDTO( //
+							stock, //
+							stockHistoryService.getLatestHistoryById(oneStockId), //
+							stockIndicatorService.getLatestIndicatorById(oneStockId));
 
-	}
-
-	@RequestMapping(method = RequestMethod.POST, value = "/update2")
-	public String updateAll_quandl() throws IOException {
-
-		quandlService.updateStocksHistory();
-
-		return "ok";
+				}) //
+				.collect(Collectors.toList());
 
 	}
 
-	@RequestMapping(method = RequestMethod.POST, value = "/update")
-	public String updateAll_yahoo() throws IOException {
+	@RequestMapping(method = RequestMethod.POST, value = "/update-history-bourso")
+	public List<LightStockDTO> updateHistoryBourso(@RequestBody List<Long> stockIds) throws IOException {
 
-		yahooService.updateStocksHistory();
+		return stockIds.stream() //
+				.map(oneStockId -> {
+					FinStock stock = stockService.getByStockId(oneStockId);
+					try {
+						if (stock == null) {
+							throw new Exception("Invalid stock id (" + oneStockId + ") !");
+						}
+						boursoService.updateOneStockHistory(stock);
 
-		return "ok";
+					} catch (Exception e) {
+						throw new RuntimeException("ERROR updateHistoryBourso", e);
+					}
+					return new LightStockDTO( //
+							stock, //
+							stockHistoryService.getLatestHistoryById(oneStockId), //
+							stockIndicatorService.getLatestIndicatorById(oneStockId));
 
-	}
-
-	@RequestMapping(method = RequestMethod.POST, value = "/{stockCode}/update_bourso")
-	public String updateOne_bourso(@PathVariable(value = "stockCode") String stockCode) throws IOException {
-
-		boursoService.getStockHistory(stockCode);
-
-		stockIndicatorService.updateIndicators(stockCode, true);
-
-		return "ok";
-
-	}
-
-	@RequestMapping(method = RequestMethod.POST, value = "/{stockCode}/update2")
-	public List<StockHistory> updateOne_quandl(@PathVariable(value = "stockCode") String stockCode) throws IOException {
-
-		quandlService.updateOneStockHistory(stockCode);
-
-		return stockHistoryService.getAllByStockCode(stockCode);
+				}) //
+				.collect(Collectors.toList());
 
 	}
 
-	@RequestMapping(method = RequestMethod.POST, value = "/{stockCode}/update")
-	public String updateOne_yahoo(@PathVariable(value = "stockCode") String stockCode) throws IOException {
+	@RequestMapping(method = RequestMethod.POST, value = "/update-history-yahoo")
+	public List<LightStockDTO> updateHistoryYahoo(@RequestBody List<Long> stockIds) throws IOException {
 
-		yahooService.updateOneStockHistory(stockCode, false);
+		return stockIds.stream() //
+				.map(oneStockId -> {
+					FinStock stock = stockService.getByStockId(oneStockId);
+					try {
+						if (stock == null) {
+							throw new Exception("Invalid stock id (" + oneStockId + ") !");
+						}
+						yahooService.updateOneStockHistory(stock, false);
 
-		stockIndicatorService.updateIndicators(stockCode, false);
+					} catch (Exception e) {
+						throw new RuntimeException("ERROR updateHistoryYahoo", e);
+					}
+					return new LightStockDTO( //
+							stock, //
+							stockHistoryService.getLatestHistoryById(oneStockId), //
+							stockIndicatorService.getLatestIndicatorById(oneStockId));
 
-		return "ok";
+				}) //
+				.collect(Collectors.toList());
 
 	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/update-indicators")
+	public List<LightStockDTO> updateIndicators(@RequestBody List<Long> stockIds) throws IOException {
+
+		return stockIds.stream() //
+				.map(oneStockId -> {
+					FinStock stock = stockService.getByStockId(oneStockId);
+					if (stock == null) {
+						throw new RuntimeException("Invalid stock id (" + oneStockId + ") !");
+					}
+					stockIndicatorService.updateIndicators(stock, false);
+
+					return new LightStockDTO( //
+							stock, //
+							stockHistoryService.getLatestHistoryById(oneStockId), //
+							stockIndicatorService.getLatestIndicatorById(oneStockId));
+
+				}) //
+				.collect(Collectors.toList());
+
+	}
+
 }

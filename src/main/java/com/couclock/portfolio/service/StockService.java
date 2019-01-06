@@ -1,6 +1,7 @@
 package com.couclock.portfolio.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -72,6 +73,10 @@ public class StockService {
 		}
 	}
 
+	public void deleteById(long stockId) {
+		stockRepository.deleteById(stockId);
+	}
+
 	public List<FinStock> findBySubstring(String substring) {
 		return stockRepository
 				.findByCodeContainingIgnoreCaseOrNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(substring,
@@ -92,6 +97,11 @@ public class StockService {
 
 	public FinStock getByCode(String stockCode) {
 		return stockRepository.findByCodeIgnoreCase(stockCode);
+	}
+
+	public FinStock getByStockId(long stockId) {
+		Optional<FinStock> stockToReturn = stockRepository.findById(stockId);
+		return stockToReturn.isPresent() ? stockToReturn.get() : null;
 	}
 
 	public void upsert(FinStock stock) {

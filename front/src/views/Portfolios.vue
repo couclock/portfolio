@@ -11,11 +11,10 @@
                 ref="pfTable"
                 md-fixed-header
                 class="md-layout-item "
-                @md-selected="onPortfolioSelect"
-                :md-selected-value="selectedPortfolios">
+                @md-selected="onPortfolioSelect">
         <md-table-toolbar>
           <div class="md-toolbar-section-start">
-            <h1 class="md-title">Portfolios ({{filteredPortfolioList.length}})</h1>
+            <h1 class="md-title">Portfolios</h1>
           </div>
           <md-field md-clearable
                     class="md-toolbar-section-end">
@@ -53,9 +52,6 @@
                       slot-scope="{ item }"
                       md-selectable="multiple"
                       md-auto-select>
-          <md-table-cell md-label="ID"
-                         md-numeric
-                         md-sort-by="id">{{ item.id }}</md-table-cell>
           <md-table-cell md-label="Code"
                          md-sort-by="code">
             <router-link :to="{ name: 'portfolioDetail', params: { code: item.code }}">

@@ -20,28 +20,20 @@ import com.couclock.portfolio.entity.StockHistory;
 public class BoursoService {
 
 	private static final Logger log = LoggerFactory.getLogger(BoursoService.class);
-	@Autowired
-	private StockService stockService;
+
 	@Autowired
 	private StockHistoryService stockHistoryService;
 
-	public void getStockHistory(String stockCode) {
+	public void updateOneStockHistory(FinStock stock) {
 
-		FinStock stock = stockService.getByCode(stockCode);
-
-		// Skip unknown stock
-		if (stock == null) {
-			return;
-		}
-
-		String urlToCall = "https://www.boursorama.com/bourse/action/graph/ws/GetTicksEOD?symbol=1rT" + stockCode
+		String urlToCall = "https://www.boursorama.com/bourse/action/graph/ws/GetTicksEOD?symbol=1rT" + stock.code
 				+ "&length=7300&period=0&guid=";
 
 		RestTemplate restTemplate = new RestTemplate();
 
 		BoursoDTO histories = restTemplate.getForObject(urlToCall, BoursoDTO.class);
 
-		Map<LocalDate, StockHistory> date2History = stockHistoryService.getAllByStockCode_Map(stockCode);
+		Map<LocalDate, StockHistory> date2History = stockHistoryService.getAllByStockCode_Map(stock.code);
 
 		List<StockHistory> toImport = new ArrayList<>();
 		if (histories != null) {
@@ -73,7 +65,7 @@ public class BoursoService {
 			});
 		}
 
-		log.warn("Stock History toImport count : " + toImport.size());
+		log.warn("Stock[" + stock.code + "] History toImport count : " + toImport.size());
 
 		stockHistoryService.createBatch(toImport);
 

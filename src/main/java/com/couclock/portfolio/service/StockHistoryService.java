@@ -23,13 +23,13 @@ public class StockHistoryService {
 
 	private static final Logger log = LoggerFactory.getLogger(StockHistoryService.class);
 
+	private final static int BATCH_SIZE = 100;
+
 	@Autowired
 	private StockHistoryRepository stockHistoryRepository;
 
 	@PersistenceContext
 	private EntityManager entityManager;
-
-	private int batchSize = 100;
 
 	public void create(StockHistory stockHistory) {
 
@@ -43,7 +43,7 @@ public class StockHistoryService {
 		for (StockHistory t : entities) {
 			entityManager.persist(t);
 			i++;
-			if (i % batchSize == 0) {
+			if (i % BATCH_SIZE == 0) {
 				// Flush a batch of inserts and release memory.
 				entityManager.flush();
 				entityManager.clear();
@@ -54,6 +54,11 @@ public class StockHistoryService {
 	@Transactional
 	public void deleteByStock(String stockCode) {
 		stockHistoryRepository.deleteByStock_Code(stockCode);
+	}
+
+	@Transactional
+	public void deleteByStockId(long stockId) {
+		stockHistoryRepository.deleteByStock_Id(stockId);
 	}
 
 	/**
@@ -116,7 +121,10 @@ public class StockHistoryService {
 
 	public StockHistory getLatestHistory(String stockCode) {
 		return stockHistoryRepository.findTop1ByStock_CodeOrderByDateDesc(stockCode);
+	}
 
+	public StockHistory getLatestHistoryById(long stockId) {
+		return stockHistoryRepository.findTop1ByStock_IdOrderByDateDesc(stockId);
 	}
 
 	public void upsert(StockHistory stockHistory) {

@@ -28,21 +28,12 @@ public class YahooService {
 	private static final Logger log = LoggerFactory.getLogger(YahooService.class);
 
 	@Autowired
-	private StockService stockService;
-	@Autowired
 	private StockHistoryService stockHistoryService;
 
-	public void updateOneStockHistory(String stockCode, boolean considerLastHistory) throws IOException {
+	public void updateOneStockHistory(FinStock stock, boolean considerLastHistory) throws IOException {
 
-		FinStock stock = stockService.getByCode(stockCode);
-
-		// Skip unknown stock
-		if (stock == null) {
-			return;
-		}
-
-		StockHistory lastStockHistory = stockHistoryService.getLatestHistory(stockCode);
-		Map<LocalDate, StockHistory> date2History = stockHistoryService.getAllByStockCode_Map(stockCode);
+		StockHistory lastStockHistory = stockHistoryService.getLatestHistory(stock.code);
+		Map<LocalDate, StockHistory> date2History = stockHistoryService.getAllByStockCode_Map(stock.code);
 
 		Calendar fromDate = Calendar.getInstance();
 
@@ -54,7 +45,7 @@ public class YahooService {
 		}
 
 		// En utilisant les API utilisés par les graphs
-		HistQuotesQuery2V8Request historyData = new HistQuotesQuery2V8Request(stockCode + ".PA", fromDate,
+		HistQuotesQuery2V8Request historyData = new HistQuotesQuery2V8Request(stock.code + ".PA", fromDate,
 				HistQuotesRequest.DEFAULT_TO, QueryInterval.DAILY);
 		List<HistoricalQuote> histories = historyData.getResult();
 
@@ -106,23 +97,10 @@ public class YahooService {
 			});
 		}
 
-		log.warn("Stock History toImport count : " + toImport.size());
+		log.warn("Stock[" + stock.code + "] History toImport count : " + toImport.size());
 
 		stockHistoryService.createBatch(toImport);
 		log.warn("Done !");
-
-	}
-
-	public void updateStocksHistory() throws IOException {
-
-		List<FinStock> stocks = stockService.getAll();
-		int count = stocks.size();
-		int current = 1;
-
-		for (FinStock oneStock : stocks) {
-			log.warn("[" + current++ + "/" + count + "] Updating " + oneStock.code);
-			updateOneStockHistory(oneStock.code, true);
-		}
 
 	}
 

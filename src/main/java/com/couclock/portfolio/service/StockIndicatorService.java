@@ -52,6 +52,11 @@ public class StockIndicatorService {
 		stockIndicatorRepository.deleteByStock_Code(stockCode);
 	}
 
+	@Transactional
+	public void deleteByStockId(long stockId) {
+		stockIndicatorRepository.deleteByStock_Id(stockId);
+	}
+
 	/**
 	 * Find first indicator in submitted map equal or before to beforeDate and after
 	 * maxBeforeDate<br/>
@@ -84,27 +89,24 @@ public class StockIndicatorService {
 		return null;
 	}
 
+	public StockIndicator getLatestIndicatorById(long stockId) {
+		return stockIndicatorRepository.findTop1ByStock_IdOrderByDateDesc(stockId);
+	}
+
 	@Transactional
-	public void updateIndicators(String stockCode, boolean resetExisting) {
-
-		FinStock stock = stockService.getByCode(stockCode);
-
-		// Skip unknown stock
-		if (stock == null) {
-			return;
-		}
+	public void updateIndicators(FinStock stock, boolean resetExisting) {
 
 		if (resetExisting) {
-			this.deleteByStock(stockCode);
+			this.deleteByStockId(stock.id);
 		}
 
-		List<StockHistory> histories = stockHistoryService.getAllByStockCode(stockCode);
+		List<StockHistory> histories = stockHistoryService.getAllByStockCode(stock.code);
 		histories.sort(Collections.reverseOrder()); // To get older at the beginning
 		if (histories.isEmpty()) {
 			return;
 		}
 		StockHistory firstHistory = histories.get(0);
-		StockIndicator lastIndicator = stockIndicatorRepository.findTop1ByStock_CodeOrderByDateDesc(stockCode);
+		StockIndicator lastIndicator = stockIndicatorRepository.findTop1ByStock_CodeOrderByDateDesc(stock.code);
 		LocalDate currentDate = lastIndicator != null ? lastIndicator.date.plusDays(1) : firstHistory.date;
 		LocalDate targetDate = LocalDate.now().plusDays(1);
 		List<StockIndicator> toImport = new ArrayList<>();
