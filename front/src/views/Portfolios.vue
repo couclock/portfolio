@@ -81,8 +81,17 @@
     </div>
 
     <!-- Add form line -->
-    <portfolio-form @portfolioAdded="portfolioAddedEventHandler"></portfolio-form>
+    <md-dialog :md-active.sync="showPortfolioFormDialog">
+      <portfolio-form-dialog @portfolioAdded="portfolioAddedEventHandler"
+                             @closeDialog="showPortfolioFormDialog = false"></portfolio-form-dialog>
+
+    </md-dialog>
     <!-- end Add form line -->
+
+    <md-button @click="showPortfolioFormDialog = true"
+               class="md-fab md-primary md-fab-bottom-right">
+      <md-icon>add</md-icon>
+    </md-button>
 
     <md-snackbar md-position="center"
                  :md-active.sync="showSnackbar"
@@ -103,7 +112,7 @@ import filter from "lodash/filter";
 
 import { HTTP } from "@/http-constants";
 import Vue from "vue";
-import portfolioForm from "@/components/PortfolioForm.vue";
+import portfolioFormDialog from "@/components/PortfolioFormDialog.vue";
 
 export default {
   name: "portfolios",
@@ -116,7 +125,8 @@ export default {
       actionsDisabled: false,
 
       showSnackbar: false,
-      snackbarMessage: ""
+      snackbarMessage: "",
+      showPortfolioFormDialog: false
     };
   },
   filters: {
@@ -243,7 +253,7 @@ export default {
     this.loadPortfolioList();
   },
   components: {
-    portfolioForm
+    portfolioFormDialog
   }
 };
 </script>
