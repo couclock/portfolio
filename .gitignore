@@ -1,6 +1,7 @@
 /target/
 !.mvn/wrapper/maven-wrapper.jar
 
+/pg_data
 /front/node_modules/
 /front/vue-material
 

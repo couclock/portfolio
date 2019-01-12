@@ -2,5 +2,8 @@ version: '2'
 services:
   postgresql:
     image: postgres:11-alpine
+    container_name: portfolio_postgresql
     ports:
-      - "5432:5432"
+      - '5432:5432'
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data

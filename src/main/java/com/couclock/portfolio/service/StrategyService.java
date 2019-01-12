@@ -171,7 +171,9 @@ public class StrategyService {
 				StockIndicator stockIndicator = stock2i.get(oneStock.stockCode).get(curDate);
 
 				// Rule 1 : Do not keep stock closing under its ema - months
-				if (false && stockHistory.close < stockIndicator.ema6Months * 0.92) {
+				// 0,96 pour 500_ESM
+				// 0,97 pour RS2K_SMC
+				if (stockHistory.close < stockIndicator.ema6Months * 0.96) {
 
 					log.info("checkProtectionRules : PROTECTION : " + oneStock.stockCode);
 
