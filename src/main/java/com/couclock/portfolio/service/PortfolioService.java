@@ -118,6 +118,7 @@ public class PortfolioService {
 
 	public List<Portfolio> getAll() {
 		return portfolioRepository.findAll().stream() //
+				.filter(onePf -> onePf.code != null) //
 				.sorted((pf1, pf2) -> pf1.code.compareTo(pf2.code)) //
 				.collect(Collectors.toList());
 
@@ -137,7 +138,7 @@ public class PortfolioService {
 	}
 
 	public Portfolio initPortfolio(Portfolio portfolio) {
-		portfolio.startDate = LocalDate.parse("2016-01-01");
+		portfolio.startDate = portfolio.startDate == null ? LocalDate.parse("2016-01-01") : portfolio.startDate;
 		portfolio.startMoney = 10000;
 		portfolio.events.clear();
 		portfolio.history.clear();

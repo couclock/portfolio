@@ -9,13 +9,25 @@
       <div class="md-subheading error-line md-layout-item md-size-100 md-theme-default"
            v-if="errorMsg">{{ errorMsg }}</div>
 
-      <!-- 1st line -->
+      <!-- line : name -->
       <div class="md-layout-item md-size-100">
         <md-field>
           <label>New portfolio code</label>
           <md-input v-model="newPFCode"></md-input>
         </md-field>
       </div>
+
+      <!-- line : startDate -->
+      <div class="md-layout md-layout-item md-size-100">
+        <div class="md-layout-item md-size-30">
+          <md-field>
+            <label>Start date</label>
+            <md-input v-model="newStartDate"
+                      type="date"></md-input>
+          </md-field>
+        </div>
+      </div>
+
       <!-- 2nd line -->
       <div class="md-layout md-layout-item md-size-100">
         <div class="md-layout-item md-size-30">
@@ -118,6 +130,7 @@ export default {
       newBucket: "us",
       newPercent: undefined,
       newStock: undefined,
+      newStartDate: undefined,
       errorMsg: undefined,
 
       strategyParameters: {
@@ -179,6 +192,7 @@ export default {
     addPortfolio() {
       HTTP.post("/portfolios", {
         code: this.newPFCode,
+        startDate: this.newStartDate,
         strategyParameters: this.strategyParameters
       })
         .then(response => {

@@ -39,6 +39,7 @@ public class PortfolioController {
 		} else {
 			portfolio = new Portfolio();
 			portfolio.code = newPortfolio.code;
+			portfolio.startDate = newPortfolio.startDate;
 			portfolio.strategyParameters = newPortfolio.strategyParameters;
 			portfolio.strategyParameters.portfolio = portfolio;
 
