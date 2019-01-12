@@ -97,45 +97,17 @@
       </div>
     </div>
 
-    <!-- Divider -->
-    <div class="md-layout md-layout-item md-size-100">
-      <md-divider class="md-inset"></md-divider>
-    </div>
-    <!-- end Divider -->
-
     <!-- Add form line -->
-    <div class="md-layout md-gutter md-layout-item md-alignment-top-center">
-      <div class="md-layout-item md-size-50">
-
-        <md-card>
-          <md-card-header>
-            <div class="md-title">Add a stock</div>
-          </md-card-header>
-          <md-card-content>
-
-            <div class="md-layout md-gutter">
-              <md-field class="md-layout-item">
-                <label>New stock code</label>
-                <md-input v-model="newStockCode"></md-input>
-              </md-field>
-              <div class="md-layout-item md-size-5">
-              </div>
-              <md-chips class="md-layout-item"
-                        v-model="newStockTags"
-                        md-placeholder="Add tag..."></md-chips>
-
-            </div>
-
-            <div class="md-layout md-alignment-top-center">
-              <md-button class="md-raised md-primary"
-                         @click="addStock">Add stock</md-button>
-            </div>
-
-          </md-card-content>
-        </md-card>
-      </div>
-    </div>
+    <md-dialog :md-active.sync="showStockFormDialog">
+      <stock-form-dialog @stockAdded="stockAddedEventHandler"
+                         @closeDialog="showStockFormDialog = false"></stock-form-dialog>
+    </md-dialog>
     <!-- end Add form line -->
+
+    <md-button @click="showStockFormDialog = true"
+               class="md-fab md-primary md-fab-bottom-right">
+      <md-icon>add</md-icon>
+    </md-button>
 
     <md-snackbar md-position="center"
                  :md-active.sync="showSnackbar"
@@ -155,6 +127,7 @@ import forEach from "lodash/forEach";
 import filter from "lodash/filter";
 import findIndex from "lodash/findIndex";
 import remove from "lodash/remove";
+import stockFormDialog from "@/components/StockFormDialog.vue";
 
 export default {
   name: "stocks",
@@ -170,12 +143,16 @@ export default {
       showSnackbar: false,
       snackbarMessage: "",
 
-      newStockCode: undefined,
-      newStockTags: []
+      showStockFormDialog: false
     };
   },
 
   methods: {
+    stockAddedEventHandler() {
+      this.snackbarMessage = "Your stock has been successfully created ! ";
+      this.showSnackbar = true;
+      this.loadStockList();
+    },
     searchOnTable() {
       if (this.search) {
         this.filteredStockList = filter(this.stockList, oneStock => {
@@ -208,24 +185,6 @@ export default {
       this.actionsDisabled = false;
     },
 
-    addStock() {
-      HTTP.post("/stocks", {
-        code: this.newStockCode,
-        tags: this.newStockTags
-      })
-        .then(() => {
-          this.snackbarMessage = "Your stock has been successfully added ! ";
-          this.showSnackbar = true;
-          this.loadStockList();
-          this.newStockCode = undefined;
-          this.newStockTags = [];
-        })
-        .catch(response => {
-          console.error("ERROR : ", response);
-          this.snackbarMessage = "ERROR : " + response;
-          this.showSnackbar = true;
-        });
-    },
     updateStockHistoryMultiple_yahoo() {
       this.actionsDisabled = true;
       let stockIds = map(this.selectedStocks, oneStock => oneStock.id);
@@ -324,8 +283,9 @@ export default {
   created() {
     this.loadStockList();
   },
-  mounted() {},
-  components: {}
+  components: {
+    stockFormDialog
+  }
 };
 </script>
 

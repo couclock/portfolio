@@ -31,7 +31,7 @@ public class StockService {
 		} catch (Exception e) {
 			throw new Exception("Invalid stock code");
 		} finally {
-			if (!stock.isValid()) {
+			if (stock != null && !stock.isValid()) {
 				throw new Exception("Invalid stock code");
 			}
 		}

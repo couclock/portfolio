@@ -17,7 +17,6 @@ import com.couclock.portfolio.dto.LightStockDTO;
 import com.couclock.portfolio.entity.FinStock;
 import com.couclock.portfolio.entity.StockHistory;
 import com.couclock.portfolio.service.BoursoService;
-import com.couclock.portfolio.service.QuandlService;
 import com.couclock.portfolio.service.StockHistoryService;
 import com.couclock.portfolio.service.StockIndicatorService;
 import com.couclock.portfolio.service.StockService;
@@ -30,9 +29,6 @@ public class StockController {
 
 	@Autowired
 	private YahooService yahooService;
-
-	@Autowired
-	private QuandlService quandlService;
 
 	@Autowired
 	private BoursoService boursoService;
