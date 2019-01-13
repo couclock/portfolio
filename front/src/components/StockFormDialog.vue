@@ -2,7 +2,10 @@
 
   <md-card>
     <md-card-header>
-      <div class="md-title">Add a stock</div>
+      <div class="md-title"
+           v-if="stockToEdit === undefined">Add a stock</div>
+      <div class="md-title"
+           v-if="stockToEdit !== undefined">Update a stock</div>
     </md-card-header>
 
     <md-card-content class="md-layout md-gutter md-alignment-top-center">
@@ -13,7 +16,8 @@
       <div class="md-layout-item md-size-100 md-layout">
         <md-field class="md-layout-item">
           <label>New stock code</label>
-          <md-input v-model="newStockCode"></md-input>
+          <md-input v-model="newStockCode"
+                    :disabled="stockToEdit !== undefined"></md-input>
         </md-field>
         <div class="md-layout-item md-size-5">
         </div>
@@ -27,7 +31,7 @@
         <md-button class="md-raised"
                    @click="closeDialog">Cancel</md-button>
         <md-button class="md-raised md-primary"
-                   @click="addStock">Add stock</md-button>
+                   @click="addStock">Confirm</md-button>
       </div>
     </md-card-content>
   </md-card>
@@ -43,12 +47,12 @@ export default {
   name: "StockFormDialog",
   data() {
     return {
-      newStockCode: undefined,
-      newStockTags: [],
+      newStockCode: this.stockToEdit ? this.stockToEdit.code : undefined,
+      newStockTags: this.stockToEdit ? this.stockToEdit.tags : [],
       errorMsg: undefined
     };
   },
-
+  props: ["stockToEdit"],
   methods: {
     closeDialog() {
       this.$emit("closeDialog");

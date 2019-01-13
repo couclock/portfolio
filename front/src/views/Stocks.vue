@@ -52,6 +52,12 @@
                 <md-icon>info</md-icon>
               </md-button>
               <md-button class="md-icon-button md-raised md-primary"
+                         title="Update stock"
+                         @click="stockToEdit = selectedStocks[0] ; showStockFormDialog = true"
+                         :disabled="selectedStocks.length !== 1">
+                <md-icon>edit</md-icon>
+              </md-button>
+              <md-button class="md-icon-button md-raised md-primary"
                          @click="resetStockHistoryMultiple"
                          :disabled="actionsDisabled">
                 <md-icon>settings_backup_restore</md-icon>
@@ -99,12 +105,13 @@
 
     <!-- Add form line -->
     <md-dialog :md-active.sync="showStockFormDialog">
-      <stock-form-dialog @stockAdded="stockAddedEventHandler"
+      <stock-form-dialog :stockToEdit="stockToEdit"
+                         @stockAdded="stockAddedEventHandler"
                          @closeDialog="showStockFormDialog = false"></stock-form-dialog>
     </md-dialog>
     <!-- end Add form line -->
 
-    <md-button @click="showStockFormDialog = true"
+    <md-button @click="stockToEdit = undefined ; showStockFormDialog = true"
                class="md-fab md-primary md-fab-bottom-right">
       <md-icon>add</md-icon>
     </md-button>
@@ -143,13 +150,18 @@ export default {
       showSnackbar: false,
       snackbarMessage: "",
 
-      showStockFormDialog: false
+      showStockFormDialog: false,
+      stockToEdit: undefined
     };
   },
 
   methods: {
     stockAddedEventHandler() {
-      this.snackbarMessage = "Your stock has been successfully created ! ";
+      if (this.stockToEdit === undefined) {
+        this.snackbarMessage = "Your stock has been successfully created ! ";
+      } else {
+        this.snackbarMessage = "Your stock has been successfully updated ! ";
+      }
       this.showSnackbar = true;
       this.loadStockList();
     },
