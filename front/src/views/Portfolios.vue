@@ -35,6 +35,12 @@
               <md-icon>autorenew</md-icon>
             </md-button>
             <md-button class="md-icon-button md-raised md-primary"
+                       title="Update stock"
+                       @click="portfolioToEdit = selectedPortfolios[0] ; showPortfolioFormDialog = true"
+                       :disabled="selectedPortfolios.length !== 1">
+              <md-icon>edit</md-icon>
+            </md-button>
+            <md-button class="md-icon-button md-raised md-primary"
                        @click="resetPortfolioBacktestMultiple"
                        :disabled="actionsDisabled">
               <md-icon>settings_backup_restore</md-icon>
@@ -82,13 +88,14 @@
 
     <!-- Add form line -->
     <md-dialog :md-active.sync="showPortfolioFormDialog">
-      <portfolio-form-dialog @portfolioAdded="portfolioAddedEventHandler"
+      <portfolio-form-dialog :portfolioToEdit="portfolioToEdit"
+                             @portfolioAdded="portfolioAddedEventHandler"
                              @closeDialog="showPortfolioFormDialog = false"></portfolio-form-dialog>
 
     </md-dialog>
     <!-- end Add form line -->
 
-    <md-button @click="showPortfolioFormDialog = true"
+    <md-button @click="portfolioToEdit = undefined; showPortfolioFormDialog = true"
                class="md-fab md-primary md-fab-bottom-right">
       <md-icon>add</md-icon>
     </md-button>
@@ -126,7 +133,8 @@ export default {
 
       showSnackbar: false,
       snackbarMessage: "",
-      showPortfolioFormDialog: false
+      showPortfolioFormDialog: false,
+      portfolioToEdit: undefined
     };
   },
   filters: {
@@ -167,7 +175,13 @@ export default {
       return count + " portfolio" + plural + " selected";
     },
     portfolioAddedEventHandler() {
-      this.snackbarMessage = "Your portfolio has been successfully created ! ";
+      if (this.portfolioToEdit === undefined) {
+        this.snackbarMessage =
+          "Your portfolio has been successfully created ! ";
+      } else {
+        this.snackbarMessage =
+          "Your portfolio has been successfully updated ! ";
+      }
       this.showSnackbar = true;
       this.loadPortfolioList();
     },

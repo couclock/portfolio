@@ -2,7 +2,10 @@
 
   <md-card>
     <md-card-header>
-      <div class="md-title">Add a portfolio</div>
+      <div class="md-title"
+           v-if="portfolioToEdit === undefined">Add a portfolio</div>
+      <div class="md-title"
+           v-if="portfolioToEdit !== undefined">Update a portfolio</div>
     </md-card-header>
     <md-card-content class="md-layout md-gutter md-alignment-top-center">
 
@@ -73,32 +76,30 @@
       <!-- 3rd line -->
       <div class="md-layout md-layout-item md-size-100">
 
-        <md-table v-model="allParameters"
-                  class="md-layout-item md-size-100"
+        <md-table class="md-layout-item md-size-100"
                   v-if="allParameters.length > 0"
-                  md-sort="bucket"
-                  md-sort-order="asc"
                   md-card>
 
-          <md-table-row slot="md-table-row"
-                        slot-scope="{ item }">
-            <md-table-cell md-label="Bucket"
-                           md-sort-by="bucket">{{ item.bucket }}</md-table-cell>
-            <md-table-cell md-label="Stock"
-                           md-sort-by="stockCode">
-              {{ item.stockCode }}
-            </md-table-cell>
-            <md-table-cell md-label="Percent"
-                           md-numeric
-                           md-sort-by="percent">{{ item.percent }}</md-table-cell>
-            <md-table-cell md-label="Actions">
+          <md-table-row>
+            <md-table-head>Bucket</md-table-head>
+            <md-table-head>Stock</md-table-head>
+            <md-table-head>Percent</md-table-head>
+            <md-table-head>Action</md-table-head>
+          </md-table-row>
 
+          <md-table-row v-for="(item, index) in allParameters"
+                        :key="index">
+            <md-table-cell>{{ item.bucket }}</md-table-cell>
+            <md-table-cell>{{ item.stockCode }}</md-table-cell>
+            <md-table-cell>{{ item.percent }}</md-table-cell>
+            <md-table-cell>
               <md-button class="md-icon-button md-dense md-accent md-raised"
                          @click="deleteStock(item)">
                 <md-icon>delete</md-icon>
               </md-button>
             </md-table-cell>
           </md-table-row>
+
         </md-table>
 
       </div>
@@ -108,7 +109,7 @@
         <md-button class="md-raised"
                    @click="closeDialog">Cancel</md-button>
         <md-button class="md-raised md-primary"
-                   @click="addPortfolio">Add portfolio</md-button>
+                   @click="addPortfolio">Confirm</md-button>
       </div>
 
     </md-card-content>
@@ -126,23 +127,66 @@ export default {
     return {
       // Add portfolio related vars
       stocksPerBucket: { us: [], exUs: [], bond: [] },
-      newPFCode: undefined,
+      newPFCode: this.portfolioToEdit ? this.portfolioToEdit.code : undefined,
       newBucket: "us",
       newPercent: undefined,
       newStock: undefined,
-      newStartDate: undefined,
+      newStartDate: this.portfolioToEdit
+        ? this.portfolioToEdit.startDate
+        : undefined,
       errorMsg: undefined,
+      firstStockAdded: false,
 
       strategyParameters: {
         "@class":
           "com.couclock.portfolio.entity.strategies.AcceleratedMomentumStrategy",
         type: "ACCELERATED_MOMENTUM",
-        usStocks: [],
-        exUsStocks: [],
-        bondStocks: []
-      },
-      allParameters: []
+        usStocks: this.portfolioToEdit
+          ? this.portfolioToEdit.strategyParameters.usStocks
+          : [],
+        exUsStocks: this.portfolioToEdit
+          ? this.portfolioToEdit.strategyParameters.exUsStocks
+          : [],
+        bondStocks: this.portfolioToEdit
+          ? this.portfolioToEdit.strategyParameters.bondStocks
+          : []
+      }
     };
+  },
+  props: ["portfolioToEdit"],
+  computed: {
+    allParameters() {
+      if (this.portfolioToEdit === undefined && !this.firstStockAdded) {
+        return [];
+      } else {
+        let result = map(this.strategyParameters.usStocks, oneStock => {
+          return {
+            bucket: "us",
+            stockCode: oneStock.stockCode,
+            percent: oneStock.percent * 100
+          };
+        });
+        result = result.concat(
+          map(this.strategyParameters.exUsStocks, oneStock => {
+            return {
+              bucket: "exUs",
+              stockCode: oneStock.stockCode,
+              percent: oneStock.percent * 100
+            };
+          })
+        );
+        result = result.concat(
+          map(this.strategyParameters.condStocks, oneStock => {
+            return {
+              bucket: "bond",
+              stockCode: oneStock.stockCode,
+              percent: oneStock.percent * 100
+            };
+          })
+        );
+        return result;
+      }
+    }
   },
   methods: {
     closeDialog() {
@@ -160,9 +204,6 @@ export default {
       });
     },
     deleteStock(portfolioLine) {
-      this.allParameters = filter(this.allParameters, oneParam => {
-        return oneParam.stockCode !== portfolioLine.stockCode;
-      });
       this.strategyParameters[portfolioLine.bucket + "Stocks"] = filter(
         this.strategyParameters[portfolioLine.bucket + "Stocks"],
         oneParam => {
@@ -180,17 +221,15 @@ export default {
         percent: this.newPercent / 100,
         stockCode: this.newStock
       });
-      this.allParameters.push({
-        bucket: this.newBucket,
-        percent: this.newPercent,
-        stockCode: this.newStock
-      });
+      this.firstStockAdded = true;
+
       this.newPercent = undefined;
       this.newStock = undefined;
       this.newBucket = "us";
     },
     addPortfolio() {
       HTTP.post("/portfolios", {
+        id: this.portfolioToEdit ? this.portfolioToEdit.id : undefined,
         code: this.newPFCode,
         startDate: this.newStartDate,
         strategyParameters: this.strategyParameters

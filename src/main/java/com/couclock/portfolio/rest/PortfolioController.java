@@ -30,24 +30,21 @@ public class PortfolioController {
 	private PortfolioService portfolioService;
 
 	@RequestMapping(method = RequestMethod.POST)
-	public String addPortfolio(@RequestBody Portfolio newPortfolio) throws Exception {
+	public String upsertPortfolio(@RequestBody Portfolio newPortfolio) throws Exception {
 
-		Portfolio portfolio = portfolioService.getByPortfolioCode(newPortfolio.code);
+		Portfolio portfolio = portfolioService.getByPortfolioId(newPortfolio.id);
 
-		if (portfolio != null) {
-			throw new Exception("That portfolio code already exists !");
-		} else {
+		if (portfolio == null) {
 			portfolio = new Portfolio();
 			portfolio.code = newPortfolio.code;
-			portfolio.startDate = newPortfolio.startDate;
-			portfolio.strategyParameters = newPortfolio.strategyParameters;
-			portfolio.strategyParameters.portfolio = portfolio;
-
-			portfolioService.initPortfolio(portfolio);
-
-			portfolioService.upsert(portfolio);
-
 		}
+		portfolio.startDate = newPortfolio.startDate;
+		portfolio.strategyParameters = newPortfolio.strategyParameters;
+		portfolio.strategyParameters.portfolio = portfolio;
+
+		portfolioService.initPortfolio(portfolio);
+
+		portfolioService.upsert(portfolio);
 
 		return "ok";
 
