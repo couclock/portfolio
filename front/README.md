@@ -12,11 +12,15 @@ npm install
 npm run serve
 ```
 
+Consider .env.development file
+
 ### Compiles and minifies for production
 
 ```
 npm run build
 ```
+
+Consider .env.production file
 
 ### Dependencies
 

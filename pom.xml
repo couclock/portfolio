@@ -64,17 +64,54 @@
 			<artifactId>ta4j-core</artifactId>
 			<version>0.12</version>
 		</dependency>
-		
+
 	</dependencies>
 
 	<build>
+	 <resources>
+        <resource>
+            <directory>src/main/resources</directory>
+            <filtering>true</filtering>
+        </resource>
+    </resources>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+			<plugin>
+				<groupId>com.google.cloud.tools</groupId>
+				<artifactId>jib-maven-plugin</artifactId>
+				<version>1.0.0</version>
+				<configuration>
+					<to>
+						<image>couclock/portfolio_backend</image>
+					</to>
+					<container>
+						<mainClass>com.couclock.portfolio.PortfolioApplication</mainClass>
+					</container>
+				</configuration>
+				
+			</plugin>
 		</plugins>
 	</build>
 
+	<profiles>
+		<profile>
+			<id>dev</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<properties>
+				<spring.profiles.active>dev</spring.profiles.active>
+			</properties>
+		</profile>
+		<profile>
+			<id>docker</id>
+			<properties>
+				<spring.profiles.active>docker</spring.profiles.active>
+			</properties>
+		</profile>
+	</profiles>
 
 </project>
