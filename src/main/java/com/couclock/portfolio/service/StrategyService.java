@@ -85,7 +85,7 @@ public class StrategyService {
 			}
 
 			// Check protection rules
-			checkProtectionRules(currentDate, pfStatus, stock2H, stock2I);
+			checkProtectionRules(currentDate, pfStatus, stock2H, stock2I, strategyParameters.ema6MonthsProtectionRatio);
 
 			final LocalDate curDate = currentDate;
 
@@ -159,9 +159,11 @@ public class StrategyService {
 	 * @param pfStatus
 	 * @param stock2h
 	 * @param stock2i
+	 * @param ema6MonthsProtectionRatio
 	 */
 	private void checkProtectionRules(LocalDate curDate, PortfolioStatus pfStatus,
-			Map<String, Map<LocalDate, StockHistory>> stock2h, Map<String, Map<LocalDate, StockIndicator>> stock2i) {
+			Map<String, Map<LocalDate, StockHistory>> stock2h, Map<String, Map<LocalDate, StockIndicator>> stock2i,
+			double ema6MonthsProtectionRatio) {
 
 		pfStatus.currentStocks.forEach(oneStock -> {
 			if (stock2h.containsKey(oneStock.stockCode) && stock2h.get(oneStock.stockCode).containsKey(curDate)
@@ -173,7 +175,7 @@ public class StrategyService {
 				// Rule 1 : Do not keep stock closing under its ema - months
 				// 0,96 pour 500_ESM
 				// 0,97 pour RS2K_SMC
-				if (stockHistory.close < stockIndicator.ema6Months * 0.96) {
+				if (stockHistory.close < stockIndicator.ema6Months * ema6MonthsProtectionRatio) {
 
 					log.info("checkProtectionRules : PROTECTION : " + oneStock.stockCode);
 

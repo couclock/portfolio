@@ -24,7 +24,6 @@ import com.couclock.portfolio.entity.sub.PortfolioBuyEvent;
 import com.couclock.portfolio.entity.sub.PortfolioEvent;
 import com.couclock.portfolio.entity.sub.PortfolioEvent.EVENT_TYPE;
 import com.couclock.portfolio.entity.sub.PortfolioSellEvent;
-import com.couclock.portfolio.repository.PortfolioEventRepository;
 import com.couclock.portfolio.repository.PortfolioRepository;
 
 /**
@@ -38,6 +37,9 @@ public class PortfolioService {
 	private static final Logger log = LoggerFactory.getLogger(PortfolioService.class);
 
 	@Autowired
+	private StrategyService strategyService;
+
+	@Autowired
 	private StockHistoryService stockHistoryService;
 
 	@Autowired
@@ -45,9 +47,6 @@ public class PortfolioService {
 
 	@Autowired
 	private PortfolioRepository portfolioRepository;
-
-	@Autowired
-	private PortfolioEventRepository portfolioEventRepository;
 
 	public void deleteById(long portfolioId) {
 		Optional<Portfolio> pf = portfolioRepository.findById(portfolioId);
@@ -66,6 +65,44 @@ public class PortfolioService {
 		if (pf != null) {
 			portfolioRepository.delete(pf);
 		}
+	}
+
+	public void findBestProtectionRatio(long portfolioId) throws Exception {
+		Portfolio portfolio = getByPortfolioId(portfolioId);
+		if (portfolio == null) {
+			return;
+		}
+		AcceleratedMomentumStrategy strategyParameters = (AcceleratedMomentumStrategy) portfolio.strategyParameters;
+		double bestCAGR = 0;
+		double currentRatio = 0.9;
+		double bestRatio = currentRatio;
+
+		while (currentRatio < 1.1) {
+
+			initPortfolio(portfolio);
+			strategyParameters.ema6MonthsProtectionRatio = currentRatio;
+			portfolio.strategyParameters = strategyParameters;
+
+			portfolio = strategyService.acceleratedDualMomentum(portfolio);
+			double currentCAGR = getCAGR(portfolio);
+
+			if (currentCAGR > bestCAGR) {
+				bestCAGR = currentCAGR;
+				bestRatio = currentRatio;
+				// upsert(portfolio);
+			}
+
+			currentRatio += 0.005;
+		}
+
+		initPortfolio(portfolio);
+
+		strategyParameters.ema6MonthsProtectionRatio = Math.round(bestRatio * 1000d) / 1000d;
+		portfolio.strategyParameters = strategyParameters;
+
+		portfolio = strategyService.acceleratedDualMomentum(portfolio);
+		upsert(portfolio);
+
 	}
 
 	/**
@@ -197,6 +234,7 @@ public class PortfolioService {
 
 		double sumSq = 0;
 		double maxValue = 0;
+		double ulcerIndex = 0;
 		for (PortfolioHistory oneHistory : portfolio.history) {
 			if (oneHistory.value > maxValue) {
 				maxValue = oneHistory.value;
@@ -204,7 +242,9 @@ public class PortfolioService {
 				sumSq = sumSq + Math.pow(100 * ((oneHistory.value / maxValue) - 1), 2);
 			}
 		}
-		double ulcerIndex = Math.sqrt(sumSq / portfolio.history.size());
+		if (!portfolio.history.isEmpty()) {
+			ulcerIndex = Math.sqrt(sumSq / portfolio.history.size());
+		}
 		return ulcerIndex;
 
 	}

@@ -29,6 +29,15 @@
                       type="date"></md-input>
           </md-field>
         </div>
+        <div class="md-layout-item md-size-5">
+        </div>
+        <div class="md-layout-item md-size-30">
+          <md-field>
+            <label>Protection ratio</label>
+            <md-input v-model="strategyParameters.ema6MonthsProtectionRatio"
+                      type="text"></md-input>
+          </md-field>
+        </div>
       </div>
 
       <!-- 2nd line -->
@@ -141,6 +150,9 @@ export default {
         "@class":
           "com.couclock.portfolio.entity.strategies.AcceleratedMomentumStrategy",
         type: "ACCELERATED_MOMENTUM",
+        ema6MonthsProtectionRatio: this.portfolioToEdit
+          ? this.portfolioToEdit.strategyParameters.ema6MonthsProtectionRatio
+          : 0,
         usStocks: this.portfolioToEdit
           ? this.portfolioToEdit.strategyParameters.usStocks
           : [],

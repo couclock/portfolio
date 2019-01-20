@@ -29,36 +29,6 @@ public class PortfolioController {
 	@Autowired
 	private PortfolioService portfolioService;
 
-	@RequestMapping(method = RequestMethod.POST, value = "/{portfolioCode}/{usStockCode}/{exUsStockCode}/{bondStockCode}")
-	public String addPortfolio(@PathVariable(value = "portfolioCode") String portfolioCode,
-			@PathVariable(value = "usStockCode") String usStockCode,
-			@PathVariable(value = "exUsStockCode") String exUsStockCode,
-			@PathVariable(value = "bondStockCode") String bondStockCode) throws Exception {
-
-		Portfolio portfolio = portfolioService.getByPortfolioCode(portfolioCode);
-
-		if (portfolio != null) {
-			throw new Exception("That portfolioCode already exists !");
-		} else {
-			portfolio = new Portfolio();
-			portfolio.code = portfolioCode;
-
-			portfolioService.initPortfolio(portfolio);
-
-			AcceleratedMomentumStrategy strategyParameters = new AcceleratedMomentumStrategy();
-			strategyParameters.addUsStock(1, usStockCode);
-			strategyParameters.addExUsStock(1, exUsStockCode);
-			strategyParameters.addBondStock(1, bondStockCode);
-			portfolio.strategyParameters = strategyParameters;
-
-			portfolioService.upsert(portfolio);
-
-		}
-
-		return "ok";
-
-	}
-
 	@RequestMapping(method = RequestMethod.DELETE)
 	public String delete(@RequestBody List<Long> idList) {
 
@@ -100,6 +70,12 @@ public class PortfolioController {
 
 		return portfolioService.getByPortfolioCode(portfolioCode);
 
+	}
+
+	@RequestMapping("/{portfolioId}/optimize")
+	public Portfolio optimize(@PathVariable(value = "portfolioId") Long portfolioId) throws Exception {
+		portfolioService.findBestProtectionRatio(portfolioId);
+		return portfolioService.getByPortfolioId(portfolioId);
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/process-backtest")
@@ -165,7 +141,39 @@ public class PortfolioController {
 
 		portfolioService.initPortfolio(portfolio);
 
+		portfolio = strategyService.acceleratedDualMomentum(portfolio);
+
 		portfolioService.upsert(portfolio);
+
+		return "ok";
+
+	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/{portfolioCode}/{usStockCode}/{exUsStockCode}/{bondStockCode}")
+	public String upsertPortfolio(@PathVariable(value = "portfolioCode") String portfolioCode,
+			@PathVariable(value = "usStockCode") String usStockCode,
+			@PathVariable(value = "exUsStockCode") String exUsStockCode,
+			@PathVariable(value = "bondStockCode") String bondStockCode) throws Exception {
+
+		Portfolio portfolio = portfolioService.getByPortfolioCode(portfolioCode);
+
+		if (portfolio != null) {
+			throw new Exception("That portfolioCode already exists !");
+		} else {
+			portfolio = new Portfolio();
+			portfolio.code = portfolioCode;
+
+			portfolioService.initPortfolio(portfolio);
+
+			AcceleratedMomentumStrategy strategyParameters = new AcceleratedMomentumStrategy();
+			strategyParameters.addUsStock(1, usStockCode);
+			strategyParameters.addExUsStock(1, exUsStockCode);
+			strategyParameters.addBondStock(1, bondStockCode);
+			portfolio.strategyParameters = strategyParameters;
+
+			portfolioService.upsert(portfolio);
+
+		}
 
 		return "ok";
 

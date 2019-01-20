@@ -34,10 +34,15 @@
                        :disabled="actionsDisabled">
               <md-icon>autorenew</md-icon>
             </md-button>
+            <md-button class="md-icon-button md-raised"
+                       @click="optimizePortfolio"
+                       :disabled="actionsDisabled || selectedPortfolios.length !== 1">
+              <md-icon>add</md-icon>
+            </md-button>
             <md-button class="md-icon-button md-raised md-primary"
                        title="Update stock"
                        @click="portfolioToEdit = selectedPortfolios[0] ; showPortfolioFormDialog = true"
-                       :disabled="selectedPortfolios.length !== 1">
+                       :disabled="actionsDisabled || selectedPortfolios.length !== 1">
               <md-icon>edit</md-icon>
             </md-button>
             <md-button class="md-icon-button md-raised md-primary"
@@ -74,9 +79,13 @@
                          md-sort-by="endMoney">{{ item.endMoney | formatNb }} €</md-table-cell>
 
           <md-table-cell md-label="CAGR"
-                         md-sort-by="cagr">{{ 100 * item.cagr | formatNb }} %</md-table-cell>
+                         md-sort-by="cagr">
+            <span v-if="item.cagr">{{ 100 * item.cagr | formatNb }} %</span>
+          </md-table-cell>
           <md-table-cell md-label="Ulcer"
-                         md-sort-by="ulcerIndex">{{ item.ulcerIndex | formatNb }} %</md-table-cell>
+                         md-sort-by="ulcerIndex">
+            <span v-if="item.ulcerIndex">{{ item.ulcerIndex | formatNb }} %</span>
+          </md-table-cell>
 
         </md-table-row>
       </md-table>
@@ -189,6 +198,17 @@ export default {
       HTTP.get("/portfolios/").then(response => {
         this.portfolioList = response.data;
         this.filteredPortfolioList = this.portfolioList;
+        this.actionsDisabled = false;
+      });
+    },
+    optimizePortfolio() {
+      this.actionsDisabled = true;
+      HTTP.get(
+        "/portfolios/" + this.selectedPortfolios[0].id + "/optimize"
+      ).then(response => {
+        let idx = findIndex(this.portfolioList, { id: response.data.id });
+        this.portfolioList.splice(idx, 1, response.data);
+
         this.actionsDisabled = false;
       });
     },

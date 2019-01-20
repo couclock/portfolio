@@ -122,7 +122,7 @@
         <md-table v-model="events"
                   v-if="events.length > 0"
                   md-sort="date"
-                  md-sort-order="asc"
+                  md-sort-order="desc"
                   md-card
                   class="md-layout-item md-size-100">
           <md-table-toolbar>
@@ -131,8 +131,7 @@
 
           <md-table-row slot="md-table-row"
                         slot-scope="{ item }">
-            <md-table-cell md-label="ID"
-                           md-numeric>{{ item.id }}</md-table-cell>
+
             <md-table-cell md-label="Date"
                            md-sort-by="date">
               {{ item.date }}
@@ -209,6 +208,7 @@ export default {
     loadEvents() {
       HTTP.get("/portfolios/" + this.currentPFId + "/events").then(response => {
         this.events = response.data;
+        reverse(this.events);
       });
     },
     updateGraph() {
