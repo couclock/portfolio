@@ -60,7 +60,7 @@
                       md-auto-select>
           <md-table-cell md-label="Code"
                          md-sort-by="code">
-            <router-link :to="{ name: 'portfolioDetail', params: { code: item.code }}">
+            <router-link :to="{ name: 'portfolioDetail', params: { id: item.id }}">
               {{ item.code }}
             </router-link>
           </md-table-cell>

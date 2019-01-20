@@ -9,7 +9,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
-import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 
 import com.couclock.portfolio.entity.Portfolio;
@@ -32,7 +31,6 @@ public abstract class StrategyParameters {
 	public STRATEGY strategy;
 
 	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "portfolio_code", referencedColumnName = "code")
 	@JsonIgnore
 	public Portfolio portfolio;
 

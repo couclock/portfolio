@@ -133,10 +133,6 @@ public class PortfolioService {
 		return pfToReturn.isPresent() ? pfToReturn.get() : null;
 	}
 
-	public List<PortfolioEvent> getEventsByPortfolioCode(String pfCode) {
-		return portfolioEventRepository.findByPortfolio_CodeOrderByIdDesc(pfCode);
-	}
-
 	public Portfolio initPortfolio(Portfolio portfolio) {
 		portfolio.startDate = portfolio.startDate == null ? LocalDate.parse("2016-01-01") : portfolio.startDate;
 		portfolio.startMoney = 10000;

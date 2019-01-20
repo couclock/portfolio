@@ -19,8 +19,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.NaturalId;
-
 import com.couclock.portfolio.entity.strategies.StrategyParameters;
 import com.couclock.portfolio.entity.sub.PortfolioAddMoneyEvent;
 import com.couclock.portfolio.entity.sub.PortfolioBuyEvent;
@@ -41,7 +39,6 @@ public class Portfolio implements Serializable {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	public long id;
 
-	@NaturalId
 	public String code;
 
 	public double startMoney;
@@ -66,12 +63,12 @@ public class Portfolio implements Serializable {
 	public StrategyParameters strategyParameters;
 
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-	@JoinColumn(name = "portfolio_code", referencedColumnName = "code")
+	@JoinColumn(name = "portfolio_id")
 	@JsonIgnore
 	public List<PortfolioEvent> events = new ArrayList<>();
 
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-	@JoinColumn(name = "portfolio_code", referencedColumnName = "code")
+	@JoinColumn(name = "portfolio_id")
 	@JsonIgnore
 	public List<PortfolioHistory> history = new ArrayList<>();
 

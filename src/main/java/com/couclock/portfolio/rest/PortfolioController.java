@@ -29,27 +29,6 @@ public class PortfolioController {
 	@Autowired
 	private PortfolioService portfolioService;
 
-	@RequestMapping(method = RequestMethod.POST)
-	public String upsertPortfolio(@RequestBody Portfolio newPortfolio) throws Exception {
-
-		Portfolio portfolio = portfolioService.getByPortfolioId(newPortfolio.id);
-
-		if (portfolio == null) {
-			portfolio = new Portfolio();
-			portfolio.code = newPortfolio.code;
-		}
-		portfolio.startDate = newPortfolio.startDate;
-		portfolio.strategyParameters = newPortfolio.strategyParameters;
-		portfolio.strategyParameters.portfolio = portfolio;
-
-		portfolioService.initPortfolio(portfolio);
-
-		portfolioService.upsert(portfolio);
-
-		return "ok";
-
-	}
-
 	@RequestMapping(method = RequestMethod.POST, value = "/{portfolioCode}/{usStockCode}/{exUsStockCode}/{bondStockCode}")
 	public String addPortfolio(@PathVariable(value = "portfolioCode") String portfolioCode,
 			@PathVariable(value = "usStockCode") String usStockCode,
@@ -106,14 +85,14 @@ public class PortfolioController {
 
 	}
 
-	@RequestMapping("/{portfolioCode}/events")
-	public List<PortfolioEvent> getEvents(@PathVariable(value = "portfolioCode") String portfolioCode) {
-		return portfolioService.getEventsByPortfolioCode(portfolioCode);
+	@RequestMapping("/{portfolioId}/events")
+	public List<PortfolioEvent> getEvents(@PathVariable(value = "portfolioId") Long portfolioId) {
+		return portfolioService.getByPortfolioId(portfolioId).events;
 	}
 
-	@RequestMapping("/{portfolioCode}/history")
-	public List<PortfolioHistory> getHistory(@PathVariable(value = "portfolioCode") String portfolioCode) {
-		return portfolioService.getByPortfolioCode(portfolioCode).history;
+	@RequestMapping("/{portfolioId}/history")
+	public List<PortfolioHistory> getHistory(@PathVariable(value = "portfolioId") Long portfolioId) {
+		return portfolioService.getByPortfolioId(portfolioId).history;
 	}
 
 	@RequestMapping("/{portfolioCode}")
@@ -168,6 +147,27 @@ public class PortfolioController {
 		});
 
 		return result;
+
+	}
+
+	@RequestMapping(method = RequestMethod.POST)
+	public String upsertPortfolio(@RequestBody Portfolio newPortfolio) throws Exception {
+
+		Portfolio portfolio = portfolioService.getByPortfolioId(newPortfolio.id);
+
+		if (portfolio == null) {
+			portfolio = new Portfolio();
+		}
+		portfolio.code = newPortfolio.code;
+		portfolio.startDate = newPortfolio.startDate;
+		portfolio.strategyParameters = newPortfolio.strategyParameters;
+		portfolio.strategyParameters.portfolio = portfolio;
+
+		portfolioService.initPortfolio(portfolio);
+
+		portfolioService.upsert(portfolio);
+
+		return "ok";
 
 	}
 

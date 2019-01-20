@@ -7,14 +7,14 @@
 
         <md-field v-if="currentPortfolio">
           <label for="portfolio">Portfolio</label>
-          <md-select v-model="currentPFCode"
+          <md-select v-model="currentPFId"
                      @md-selected="loadPortfolio"
                      name="portfolio"
                      md-dense
                      id="portfolio">
             <md-option v-for="pf in portfolios"
                        :key="pf.id"
-                       :value="pf.code">{{ pf.code }}</md-option>
+                       :value="pf.id">{{ pf.code }}</md-option>
           </md-select>
         </md-field>
       </div>
@@ -164,7 +164,7 @@ export default {
   data() {
     return {
       handler: new Vue(),
-      currentPFCode: undefined,
+      currentPFId: undefined,
       currentPortfolio: undefined,
       portfolios: [],
       events: []
@@ -183,16 +183,13 @@ export default {
     }
   },
   methods: {
-    loadPortfolio(newPortfolio) {
+    loadPortfolio(newPortfolioId) {
       this.$router.push({
         name: "portfolioDetail",
-        params: { code: newPortfolio }
+        params: { id: newPortfolioId }
       });
-      this.currentPFCode = newPortfolio;
-      this.currentPortfolio = find(this.portfolios, [
-        "code",
-        this.currentPFCode
-      ]);
+      this.currentPFId = newPortfolioId;
+      this.currentPortfolio = find(this.portfolios, ["id", this.currentPFId]);
       reverse(this.currentPortfolio.periods);
       this.updateGraph();
       this.loadEvents();
@@ -203,27 +200,19 @@ export default {
         this.portfolios = response.data;
         if (this.portfolios.length > 0) {
           this.currentPortfolio = find(this.portfolios, [
-            "code",
-            this.currentPFCode
+            "id",
+            this.currentPFId
           ]);
         }
       });
     },
     loadEvents() {
-      HTTP.get("/portfolios/" + this.currentPFCode + "/events").then(
-        response => {
-          this.events = response.data;
-        }
-      );
-    },
-    updateStrategy(strategyCode) {
-      HTTP.get("/portfolios/" + strategyCode).then(response => {
-        this.currentPortfolio = response.data;
-        this.currentPFCode = this.currentPortfolio.code;
+      HTTP.get("/portfolios/" + this.currentPFId + "/events").then(response => {
+        this.events = response.data;
       });
     },
     updateGraph() {
-      HTTP.get("/portfolios/" + this.currentPFCode + "/history")
+      HTTP.get("/portfolios/" + this.currentPFId + "/history")
         .then(response => {
           const options = {
             size: {
@@ -279,7 +268,7 @@ export default {
     }
   },
   created() {
-    this.currentPFCode = this.$route.params.code;
+    this.currentPFId = this.$route.params.id;
     this.loadPortfolioList();
     this.updateGraph();
     this.loadEvents();
