@@ -176,7 +176,7 @@ export default {
           })
         );
         result = result.concat(
-          map(this.strategyParameters.condStocks, oneStock => {
+          map(this.strategyParameters.bondStocks, oneStock => {
             return {
               bucket: "bond",
               stockCode: oneStock.stockCode,

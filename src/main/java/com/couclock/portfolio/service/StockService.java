@@ -27,16 +27,16 @@ public class StockService {
 
 		Stock stock = null;
 		try {
-			stock = YahooFinance.get(newStock.code.toUpperCase() + ".PA");
+			stock = YahooFinance.get(newStock.code.toUpperCase().trim() + ".PA");
 		} catch (Exception e) {
 			throw new Exception("Invalid stock code");
 		} finally {
-			if (stock != null && !stock.isValid()) {
+			if (stock == null || !stock.isValid()) {
 				throw new Exception("Invalid stock code");
 			}
 		}
 
-		newStock.code = newStock.code.toUpperCase();
+		newStock.code = newStock.code.toUpperCase().trim();
 		newStock.name = stock.getName();
 		newStock.currency = stock.getCurrency();
 		newStock.stockExchange = stock.getStockExchange();
