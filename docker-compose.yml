@@ -7,7 +7,7 @@ services:
       - '5432:5432'
     volumes:
       - ./pg_data:/var/lib/postgresql/data
-      
+
   backend:
     image: couclock/portfolio_backend
     container_name: portfolio_backend
@@ -15,11 +15,11 @@ services:
       - '8080:8080'
     depends_on:
       - postgresql
-      
+
   frontend:
     image: couclock/portfolio_frontend
     container_name: portfolio_frontend
-    build: ./front
+    build: ./front/docker
     ports:
       - '80:80'
     depends_on:
