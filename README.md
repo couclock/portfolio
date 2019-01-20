@@ -19,3 +19,10 @@ docker-compose build
 docker-compose up
 
 ```
+
+OR
+
+```
+docker-compose create && docker-compose start
+
+```
