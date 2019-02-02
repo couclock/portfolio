@@ -138,7 +138,7 @@ public class StrategyService {
 				pf.history.add(todayH);
 			}
 
-			log.warn("PF status [" + currentDate + "] : " + pfStatus);
+			log.debug("PF status [" + currentDate + "] : " + pfStatus);
 
 			currentDate = currentDate.plusDays(1);
 		}
