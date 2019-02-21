@@ -17,6 +17,7 @@ import com.couclock.portfolio.dto.LightStockDTO;
 import com.couclock.portfolio.entity.FinStock;
 import com.couclock.portfolio.entity.StockHistory;
 import com.couclock.portfolio.service.BoursoService;
+import com.couclock.portfolio.service.SchedulingService;
 import com.couclock.portfolio.service.StockHistoryService;
 import com.couclock.portfolio.service.StockIndicatorService;
 import com.couclock.portfolio.service.StockService;
@@ -35,6 +36,8 @@ public class StockController {
 
 	@Autowired
 	private StockService stockService;
+	@Autowired
+	private SchedulingService schedulingService;
 
 	@Autowired
 	private StockIndicatorService stockIndicatorService;
@@ -116,6 +119,13 @@ public class StockController {
 		StockHistory stockHistory = stockHistoryService.getLatestHistory(stockCode);
 
 		return stockHistory != null ? stockHistory : new StockHistory();
+
+	}
+
+	@RequestMapping("/mail")
+	public void mail() throws Exception {
+
+		schedulingService.sendEMail();
 
 	}
 

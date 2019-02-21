@@ -39,6 +39,8 @@ public class YahooService {
 
 		if (lastStockHistory == null || !considerLastHistory) {
 			fromDate.set(2000, 01, 01);
+		} else if (lastStockHistory.date.equals(LocalDate.now())) { // Exit if we already have today stock history
+			return;
 		} else {
 			Date fDate = java.sql.Date.valueOf(lastStockHistory.date.plusDays(1));
 			fromDate.setTime(fDate);
