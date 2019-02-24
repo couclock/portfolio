@@ -42,7 +42,7 @@ public class BoursoService {
 				LocalDate curDate = LocalDate.parse("1970-01-01").plusDays(oneDay.d);
 
 				// Skip known history
-				if (date2History.containsKey(curDate)) {
+				if (date2History != null && date2History.containsKey(curDate)) {
 					log.debug("Skipping " + curDate + " (known) !");
 
 					return;
