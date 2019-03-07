@@ -12,6 +12,14 @@ import javax.persistence.ManyToOne;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+/**
+ * SQL request to detect error <br/>
+ * select count(*), date, stock_code from stock_history group by date,
+ * stock_code having count(*) > 1<br/>
+ *
+ * @author dany
+ *
+ */
 @Entity
 public class StockHistory implements Comparable<StockHistory> {
 

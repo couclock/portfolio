@@ -66,7 +66,7 @@ public class PortfolioStatus {
 	public MyCurrentStock getStock(String stockCode) {
 		Optional<MyCurrentStock> found = currentStocks.stream() //
 				.filter(oneStock -> {
-					return oneStock.stockCode == stockCode;
+					return oneStock.stockCode.equals(stockCode);
 				}) //
 				.findFirst();
 

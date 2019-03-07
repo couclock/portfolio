@@ -72,6 +72,9 @@ public class SchedulingService {
 	}
 
 	private static final Logger log = LoggerFactory.getLogger(SchedulingService.class);
+
+	@Autowired
+	private StockIndicatorService stockIndicatorService;
 	@Autowired
 	private StockService stockService;
 	@Autowired
@@ -104,7 +107,7 @@ public class SchedulingService {
 		Security.addProvider(new OAuth2Provider());
 	}
 
-	@Scheduled(fixedDelay = 1000 * 60 * 60 * 3)
+	@Scheduled(fixedDelay = 1000 * 60 * 60 * 3, initialDelay = 1000)
 	@Transactional
 	public void checkAndUpdatePortfolios() {
 
@@ -120,6 +123,8 @@ public class SchedulingService {
 			try {
 				yahooService.updateOneStockHistory(oneStock, true);
 				boursoService.updateOneStockHistory(oneStock);
+				stockIndicatorService.updateIndicators(oneStock, false);
+
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
