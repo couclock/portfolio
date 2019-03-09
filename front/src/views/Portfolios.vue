@@ -30,14 +30,16 @@
 
           <div class="md-toolbar-section-end">
             <md-button class="md-icon-button md-raised"
+                       title="Update portfolio backtest"
                        @click="processPortfolioBacktestMultiple"
                        :disabled="actionsDisabled">
               <md-icon>autorenew</md-icon>
             </md-button>
             <md-button class="md-icon-button md-raised"
                        @click="optimizePortfolio"
+                       title="Optimize portoflio (finding best ratio)"
                        :disabled="actionsDisabled || selectedPortfolios.length !== 1">
-              <md-icon>add</md-icon>
+              <md-icon>trending_up</md-icon>
             </md-button>
             <md-button class="md-icon-button md-raised md-primary"
                        title="Update stock"
@@ -70,9 +72,9 @@
             </router-link>
           </md-table-cell>
           <md-table-cell md-label="Start date"
-                         md-sort-by="startDate">{{ item.startDate }}</md-table-cell>
+                         md-sort-by="startDate">{{ item.startDate | formatDate }}</md-table-cell>
           <md-table-cell md-label="End date"
-                         md-sort-by="endDate">{{ item.endDate }}</md-table-cell>
+                         md-sort-by="endDate">{{ item.endDate | formatDate }}</md-table-cell>
           <md-table-cell md-label="Start money"
                          md-sort-by="startMoney">{{ item.startMoney | formatNb }} €</md-table-cell>
           <md-table-cell md-label="End money"
@@ -85,6 +87,11 @@
           <md-table-cell md-label="Ulcer"
                          md-sort-by="ulcerIndex">
             <span v-if="item.ulcerIndex">{{ item.ulcerIndex | formatNb }} %</span>
+          </md-table-cell>
+          <md-table-cell md-label="Optim">
+            <span v-if="item.strategyParameters.ema6MonthsProtectionRatio && item.strategyParameters.ema6MonthsProtectionRatio > 0">
+              <md-icon :title="item.strategyParameters.ema6MonthsProtectionRatio">trending_up</md-icon>
+            </span>
           </md-table-cell>
 
         </md-table-row>
@@ -125,6 +132,7 @@ import remove from "lodash/remove";
 import map from "lodash/map";
 import forEach from "lodash/forEach";
 import filter from "lodash/filter";
+import { format } from "date-fns";
 
 import { HTTP } from "@/http-constants";
 import Vue from "vue";
@@ -152,6 +160,13 @@ export default {
         return "";
       }
       value = Math.round(value * 100) / 100;
+      return value;
+    },
+    formatDate: function(value) {
+      if (!value) {
+        return "";
+      }
+      value = format(value, "DD/MM/YYYY");
       return value;
     }
   },

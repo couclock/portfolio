@@ -79,16 +79,16 @@
             </md-table-cell>
             <md-table-cell md-label="Buy date"
                            md-sort-by="startDate">
-              {{ item.startDate }}
+              {{ item.startDate | formatDate }}
+            </md-table-cell>
+            <md-table-cell md-label="Sell date"
+                           md-sort-by="endDate">
+              {{ item.endDate | formatDate }}
             </md-table-cell>
             <md-table-cell md-label="Buy price"
                            md-sort-by="buyPrice"
                            md-numeric>
               {{ item.buyPrice | formatNb }} €
-            </md-table-cell>
-            <md-table-cell md-label="Sell date"
-                           md-sort-by="endDate">
-              {{ item.endDate }}
             </md-table-cell>
             <md-table-cell md-label="Sell price"
                            md-sort-by="sellPrice"
@@ -134,7 +134,7 @@
 
             <md-table-cell md-label="Date"
                            md-sort-by="date">
-              {{ item.date }}
+              {{ item.date | formatDate }}
             </md-table-cell>
             <md-table-cell md-label="Type"
                            md-sort-by="type">{{ item.type }}</md-table-cell>
@@ -157,6 +157,7 @@ import reverse from "lodash/reverse";
 import VueC3 from "vue-c3";
 import { HTTP } from "@/http-constants";
 import router from "vue-router";
+import { format } from "date-fns";
 
 export default {
   name: "PortfolioDetail",
@@ -179,6 +180,13 @@ export default {
     },
     pretty: function(value) {
       return JSON.stringify(value, null, 2);
+    },
+    formatDate: function(value) {
+      if (!value) {
+        return "";
+      }
+      value = format(value, "DD/MM/YYYY");
+      return value;
     }
   },
   methods: {

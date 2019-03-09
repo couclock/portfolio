@@ -23,6 +23,15 @@ public class StockService {
 	@Autowired
 	private StockRepository stockRepository;
 
+	@Autowired
+	private YahooService yahooService;
+
+	@Autowired
+	private BoursoService boursoService;
+
+	@Autowired
+	private StockIndicatorService stockIndicatorService;
+
 	public void addOne(FinStock newStock) throws Exception {
 
 		Stock stock = null;
@@ -42,6 +51,10 @@ public class StockService {
 		newStock.stockExchange = stock.getStockExchange();
 
 		this.upsert(newStock);
+
+		yahooService.updateOneStockHistory(newStock, true);
+		boursoService.updateOneStockHistory(newStock);
+		stockIndicatorService.updateIndicators(newStock, false);
 	}
 
 	public void addStock(String stockCode) throws Exception {

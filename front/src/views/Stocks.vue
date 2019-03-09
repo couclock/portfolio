@@ -91,11 +91,11 @@
               </md-chip>
             </md-table-cell>
             <md-table-cell md-label="Last history date">
-              <span>{{ item.lastHistoryDate }}</span>
+              <span>{{ item.lastHistoryDate | formatDate }}</span>
             </md-table-cell>
             <md-table-cell md-label="Last indicator date"
                            :class="{ 'missing-indicator': item.lastIndicatorDate !== item.lastHistoryDate }">
-              <span>{{ item.lastIndicatorDate }}</span>
+              <span>{{ item.lastIndicatorDate | formatDate }}</span>
             </md-table-cell>
 
           </md-table-row>
@@ -135,6 +135,7 @@ import filter from "lodash/filter";
 import findIndex from "lodash/findIndex";
 import remove from "lodash/remove";
 import stockFormDialog from "@/components/StockFormDialog.vue";
+import { format } from "date-fns";
 
 export default {
   name: "stocks",
@@ -154,7 +155,15 @@ export default {
       stockToEdit: undefined
     };
   },
-
+  filters: {
+    formatDate: function(value) {
+      if (!value) {
+        return "";
+      }
+      value = format(value, "DD/MM/YYYY");
+      return value;
+    }
+  },
   methods: {
     stockAddedEventHandler() {
       if (this.stockToEdit === undefined) {
