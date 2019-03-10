@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.couclock.portfolio.entity.FinStock;
+import com.couclock.portfolio.entity.Portfolio;
 import com.couclock.portfolio.repository.StockRepository;
 
 import yahoofinance.Stock;
@@ -28,6 +29,9 @@ public class StockService {
 
 	@Autowired
 	private BoursoService boursoService;
+
+	@Autowired
+	private PortfolioService portfolioService;
 
 	@Autowired
 	private StockIndicatorService stockIndicatorService;
@@ -79,14 +83,21 @@ public class StockService {
 		this.upsert(finStock);
 	}
 
-	public void deleteByCode(String stockCode) {
-		FinStock stock = stockRepository.findByCodeIgnoreCase(stockCode);
-		if (stock != null) {
-			stockRepository.delete(stock);
+	public void deleteById(long stockId) throws Exception {
+		// Check stock is not used anymore by a portfolio
+		Optional<FinStock> stock = stockRepository.findById(stockId);
+		if (!stock.isPresent()) {
+			return;
 		}
-	}
+		String stockCode = stock.get().code;
+		List<Portfolio> portfolios = portfolioService.getAll();
+		for (Portfolio onePortfolio : portfolios) {
+			if (onePortfolio.strategyParameters.getStockList().contains(stockCode)) {
+				throw new Exception(
+						"'" + stockCode + "' stock cannot be deleted : used by '" + onePortfolio.code + "' portfolio");
+			}
+		}
 
-	public void deleteById(long stockId) {
 		stockRepository.deleteById(stockId);
 	}
 

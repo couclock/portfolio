@@ -200,8 +200,15 @@ export default {
         this.actionsDisabled = false;
       });
     },
+    /* ***************************************************************************
+     * handleError
+     * ***************************************************************************/
     handleError(response) {
-      this.snackbarMessage = "ERROR : " + response;
+      if (response.data && response.data.message) {
+        this.snackbarMessage = "ERROR : " + response.data.message;
+      } else {
+        this.snackbarMessage = "ERROR : " + response;
+      }
       this.showSnackbar = true;
       this.actionsDisabled = false;
     },
@@ -278,21 +285,27 @@ export default {
         })
         .catch(this.handleError);
     },
+    /* ***************************************************************************
+     * deleteStockMultiple
+     * ***************************************************************************/
     deleteStockMultiple() {
       this.actionsDisabled = true;
       let stockIds = map(this.selectedStocks, oneStock => oneStock.id);
 
-      HTTP.delete("/stocks", { data: stockIds }).then(response => {
-        this.snackbarMessage = "Your stocks have been successfully deleted ! ";
-        this.showSnackbar = true;
+      HTTP.delete("/stocks", { data: stockIds })
+        .then(response => {
+          this.snackbarMessage =
+            "Your stocks have been successfully deleted ! ";
+          this.showSnackbar = true;
 
-        forEach(this.selectedStocks, oneSelectedStock => {
-          remove(this.stockList, { id: oneSelectedStock.id });
-        });
+          forEach(this.selectedStocks, oneSelectedStock => {
+            remove(this.stockList, { id: oneSelectedStock.id });
+          });
 
-        this.unselectAllStocks();
-        this.actionsDisabled = false;
-      });
+          this.unselectAllStocks();
+          this.actionsDisabled = false;
+        })
+        .catch(this.handleError);
     },
 
     unselectAllStocks() {

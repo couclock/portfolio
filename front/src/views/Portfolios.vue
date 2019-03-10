@@ -227,8 +227,15 @@ export default {
         this.actionsDisabled = false;
       });
     },
+    /* ***************************************************************************
+     * handleError
+     * ***************************************************************************/
     handleError(response) {
-      this.snackbarMessage = "ERROR : " + response;
+      if (response.data && response.data.message) {
+        this.snackbarMessage = "ERROR : " + response.data.message;
+      } else {
+        this.snackbarMessage = "ERROR : " + response;
+      }
       this.showSnackbar = true;
       this.actionsDisabled = false;
     },

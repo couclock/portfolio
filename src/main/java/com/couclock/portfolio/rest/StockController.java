@@ -64,11 +64,13 @@ public class StockController {
 	}
 
 	@RequestMapping(method = RequestMethod.DELETE)
-	public List<Long> delete(@RequestBody List<Long> stockIds) {
+	public List<Long> delete(@RequestBody List<Long> stockIds) throws Exception {
 
 		this.reset(stockIds);
 
-		stockIds.forEach(stockService::deleteById);
+		for (Long oneStockId : stockIds) {
+			stockService.deleteById(oneStockId);
+		}
 
 		return stockIds;
 
