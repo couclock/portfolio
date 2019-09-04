@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -35,6 +36,8 @@ public class StockIndicatorService {
 	private static final Logger log = LoggerFactory.getLogger(StockIndicatorService.class);
 	private static final int BATCH_SIZE = 100;
 
+	private Map<String, List<StockIndicator>> indicatorCache = new HashMap<>();
+
 	@Autowired
 	private StockIndicatorRepository stockIndicatorRepository;
 
@@ -43,9 +46,6 @@ public class StockIndicatorService {
 
 	@PersistenceContext
 	private EntityManager entityManager;
-
-	@Autowired
-	private StockService stockService;
 
 	@Transactional
 	public void deleteByStock(String stockCode) {
@@ -79,6 +79,21 @@ public class StockIndicatorService {
 		return null;
 	}
 
+	public StockIndicator findFirstIndicatorBefore(String stockCode, LocalDate beforeDate, LocalDate maxBeforeDate) {
+
+		if (!indicatorCache.containsKey(stockCode)) {
+			indicatorCache.put(stockCode, stockIndicatorRepository.findByStock_CodeOrderByDateDesc(stockCode));
+		}
+
+		Optional<StockIndicator> indicatorFound = indicatorCache.get(stockCode).stream() //
+				.filter(oneIndicator -> {
+					return oneIndicator.date.isEqual(beforeDate)
+							|| (oneIndicator.date.isBefore(beforeDate) && oneIndicator.date.isAfter(maxBeforeDate));
+				}).findFirst();
+
+		return indicatorFound.isPresent() ? indicatorFound.get() : null;
+	}
+
 	public Map<LocalDate, StockIndicator> getAllByStockCode_Map(String stockCode) {
 		try {
 			return stockIndicatorRepository.findByStock_CodeOrderByDateDesc(stockCode).stream() //
@@ -101,10 +116,11 @@ public class StockIndicatorService {
 		}
 
 		List<StockHistory> histories = stockHistoryService.getAllByStockCode(stock.code);
-		histories.sort(Collections.reverseOrder()); // To get older at the beginning
 		if (histories.isEmpty()) {
 			return;
 		}
+		histories.sort(Collections.reverseOrder()); // To get older at the beginning
+
 		StockHistory firstHistory = histories.get(0);
 		StockIndicator lastIndicator = stockIndicatorRepository.findTop1ByStock_CodeOrderByDateDesc(stock.code);
 		LocalDate currentDate = lastIndicator != null ? lastIndicator.date.plusDays(1) : firstHistory.date;
@@ -146,6 +162,9 @@ public class StockIndicatorService {
 
 		createBatch(toImport);
 		log.warn("Done !");
+
+		// Clean local cache
+		indicatorCache.remove(stock.code);
 
 	}
 

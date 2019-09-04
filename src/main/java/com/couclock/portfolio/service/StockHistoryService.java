@@ -1,8 +1,10 @@
 package com.couclock.portfolio.service;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -25,17 +27,13 @@ public class StockHistoryService {
 
 	private final static int BATCH_SIZE = 100;
 
+	private Map<String, List<StockHistory>> historyCache = new HashMap<>();
+
 	@Autowired
 	private StockHistoryRepository stockHistoryRepository;
 
 	@PersistenceContext
 	private EntityManager entityManager;
-
-	public void create(StockHistory stockHistory) {
-
-		stockHistoryRepository.save(stockHistory);
-
-	}
 
 	@Transactional
 	public void createBatch(List<StockHistory> entities) {
@@ -49,11 +47,14 @@ public class StockHistoryService {
 				entityManager.clear();
 			}
 		}
+		historyCache.clear();
 	}
 
 	@Transactional
 	public void deleteByStock(String stockCode) {
 		stockHistoryRepository.deleteByStock_Code(stockCode);
+		historyCache.remove(stockCode);
+
 	}
 
 	@Transactional
@@ -83,6 +84,25 @@ public class StockHistoryService {
 		return null;
 	}
 
+	public StockHistory findFirstHistoryAfter(String stockCode, LocalDate afterDate, LocalDate maxAfterDate) {
+
+		if (!historyCache.containsKey(stockCode)) {
+			historyCache.put(stockCode, stockHistoryRepository.findByStock_CodeOrderByDateAsc(stockCode));
+		}
+
+		Optional<StockHistory> historyFound = historyCache.get(stockCode).stream() //
+				.sorted((h1, h2) -> {
+					return h1.date.compareTo(h2.date);
+				}) //
+				.filter(oneHistory -> {
+					return oneHistory.date.isEqual(afterDate) //
+							|| (oneHistory.date.isAfter(afterDate) //
+									&& (maxAfterDate == null || oneHistory.date.isBefore(maxAfterDate)));
+				}).findFirst();
+
+		return historyFound.isPresent() ? historyFound.get() : null;
+	}
+
 	/**
 	 * Find history in submitted map equal or before to beforeDate and after
 	 * maxBeforeDate<br/>
@@ -105,6 +125,25 @@ public class StockHistoryService {
 		return null;
 	}
 
+	public StockHistory findFirstHistoryBefore(String stockCode, LocalDate beforeDate, LocalDate maxBeforeDate) {
+
+		if (!historyCache.containsKey(stockCode)) {
+			historyCache.put(stockCode, stockHistoryRepository.findByStock_CodeOrderByDateAsc(stockCode));
+		}
+
+		Optional<StockHistory> historyFound = historyCache.get(stockCode).stream() //
+				.sorted((h1, h2) -> {
+					return h1.date.compareTo(h2.date) * -1;
+				}) //
+				.filter(oneHistory -> {
+					return oneHistory.date.isEqual(beforeDate) //
+							|| (oneHistory.date.isBefore(beforeDate) //
+									&& (maxBeforeDate == null || oneHistory.date.isAfter(maxBeforeDate)));
+				}).findFirst();
+
+		return historyFound.isPresent() ? historyFound.get() : null;
+	}
+
 	public List<StockHistory> getAllByStockCode(String stockCode) {
 		return stockHistoryRepository.findByStock_CodeOrderByDateDesc(stockCode);
 	}
@@ -125,24 +164,6 @@ public class StockHistoryService {
 
 	public StockHistory getLatestHistoryById(long stockId) {
 		return stockHistoryRepository.findTop1ByStock_IdOrderByDateDesc(stockId);
-	}
-
-	public void upsert(StockHistory stockHistory) {
-
-		StockHistory existing = stockHistoryRepository.findByStock_CodeAndDate(stockHistory.stock.code,
-				stockHistory.date);
-		if (existing == null) {
-			create(stockHistory);
-		} else {
-			existing.open = stockHistory.open;
-			existing.high = stockHistory.high;
-			existing.low = stockHistory.low;
-			existing.close = stockHistory.close;
-			existing.volume = stockHistory.volume;
-
-			stockHistoryRepository.save(existing);
-		}
-
 	}
 
 }
