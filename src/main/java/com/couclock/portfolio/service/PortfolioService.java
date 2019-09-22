@@ -19,7 +19,7 @@ import com.couclock.portfolio.entity.PortfolioPeriod;
 import com.couclock.portfolio.entity.PortfolioStatistic;
 import com.couclock.portfolio.entity.PortfolioStatus;
 import com.couclock.portfolio.entity.StockHistory;
-import com.couclock.portfolio.entity.strategies.AcceleratedMomentumStrategy;
+import com.couclock.portfolio.entity.strategies.AcceleratedMomentumParameters;
 import com.couclock.portfolio.entity.sub.PortfolioBuyEvent;
 import com.couclock.portfolio.entity.sub.PortfolioEvent;
 import com.couclock.portfolio.entity.sub.PortfolioEvent.EVENT_TYPE;
@@ -72,7 +72,7 @@ public class PortfolioService {
 		if (portfolio == null) {
 			return;
 		}
-		AcceleratedMomentumStrategy strategyParameters = (AcceleratedMomentumStrategy) portfolio.strategyParameters;
+		AcceleratedMomentumParameters strategyParameters = (AcceleratedMomentumParameters) portfolio.strategyParameters;
 		double bestCAGR = 0;
 		double currentRatio = 0.9;
 		double bestRatio = currentRatio;
@@ -80,7 +80,7 @@ public class PortfolioService {
 		while (currentRatio < 1.1) {
 
 			initPortfolio(portfolio);
-			strategyParameters.ema6MonthsProtectionRatio = currentRatio;
+			// strategyParameters.ema6MonthsProtectionRatio = currentRatio;
 			portfolio.strategyParameters = strategyParameters;
 
 			portfolio = strategyService.acceleratedDualMomentum(portfolio);
@@ -97,7 +97,8 @@ public class PortfolioService {
 
 		initPortfolio(portfolio);
 
-		strategyParameters.ema6MonthsProtectionRatio = Math.round(bestRatio * 1000d) / 1000d;
+		// strategyParameters.ema6MonthsProtectionRatio = Math.round(bestRatio * 1000d)
+		// / 1000d;
 		portfolio.strategyParameters = strategyParameters;
 
 		portfolio = strategyService.acceleratedDualMomentum(portfolio);
@@ -140,10 +141,10 @@ public class PortfolioService {
 
 					this.initPortfolio(portfolio);
 
-					AcceleratedMomentumStrategy strategyParameters = new AcceleratedMomentumStrategy();
-					strategyParameters.addUsStock(1, oneUsStock);
-					strategyParameters.addExUsStock(1, oneExUsStock);
-					strategyParameters.addBondStock(1, oneBondStock);
+					AcceleratedMomentumParameters strategyParameters = new AcceleratedMomentumParameters();
+//					strategyParameters.addUsStock(1, oneUsStock);
+//					strategyParameters.addExUsStock(1, oneExUsStock);
+//					strategyParameters.addBondStock(1, oneBondStock);
 					portfolio.strategyParameters = strategyParameters;
 
 					this.upsert(portfolio);
@@ -262,9 +263,9 @@ public class PortfolioService {
 				.collect(Collectors.toList());
 
 		Map<String, Map<LocalDate, StockHistory>> stock2H = new HashMap<>();
-		for (String oneStock : portfolio.strategyParameters.getStockList()) {
-			stock2H.put(oneStock, stockHistoryService.getAllByStockCode_Map(oneStock));
-		}
+//		for (String oneStock : portfolio.strategyParameters.getStockList()) {
+//			stock2H.put(oneStock, stockHistoryService.getAllByStockCode_Map(oneStock));
+//		}
 
 		portfolio.periods.clear();
 		portfolio.statistics.clear();

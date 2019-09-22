@@ -1,7 +1,6 @@
 package com.couclock.portfolio.service.strategies;
 
 import java.time.LocalDate;
-import java.util.Map;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -14,6 +13,8 @@ import com.couclock.portfolio.entity.BacktestTransaction;
 import com.couclock.portfolio.entity.FinStock;
 import com.couclock.portfolio.entity.StockHistory;
 import com.couclock.portfolio.entity.StockIndicator;
+import com.couclock.portfolio.entity.strategies.AcceleratedMomentumParameters;
+import com.couclock.portfolio.entity.strategies.StrategyParameters;
 import com.couclock.portfolio.service.BacktestService;
 import com.couclock.portfolio.service.StockIndicatorService;
 import com.couclock.portfolio.service.StockService;
@@ -42,6 +43,7 @@ public class AcceleratedMomentumStrategy extends AbstractStrategy {
 	public void continueBacktest(Backtest bt) throws Exception {
 
 		checkParameters(bt.strategyParameters);
+		AcceleratedMomentumParameters amParam = (AcceleratedMomentumParameters) bt.strategyParameters;
 
 		LocalDate currentDate = LocalDate.from(bt.startDate);
 		Optional<BacktestTransaction> openTransactionOpt = bt.transactions.stream() //
@@ -57,7 +59,7 @@ public class AcceleratedMomentumStrategy extends AbstractStrategy {
 
 		while (currentDate.isBefore(LocalDate.now())) {
 			currentDate = dateUtils.getLastDayOfMonth(currentDate);
-			nextStock = getNextStock(currentDate, bt.strategyParameters);
+			nextStock = getNextStock(currentDate, amParam);
 
 			if (openTransaction != null && !openTransaction.stock.code.equals(nextStock.code)) {
 				openTransaction = sellStock(currentDate.plusDays(1), openTransaction);
@@ -99,25 +101,31 @@ public class AcceleratedMomentumStrategy extends AbstractStrategy {
 		return btt;
 	}
 
-	private void checkParameters(Map<String, Object> parameters) throws Exception {
+	private void checkParameters(StrategyParameters parameters) throws Exception {
 
-		if (!parameters.containsKey(US_STOCK)) {
-			throw new Exception("Back parameter must contain a valid usStock");
-		}
-		if (!parameters.containsKey(EX_US_STOCK)) {
-			throw new Exception("Back parameter must contain a valid exUsStock");
-		}
-		if (!parameters.containsKey(BOND_STOCK)) {
-			throw new Exception("Back parameter must contain a valid bondStock");
+		if (parameters instanceof AcceleratedMomentumParameters) {
+			AcceleratedMomentumParameters amParam = (AcceleratedMomentumParameters) parameters;
+			if (amParam.usStock == null) {
+				throw new Exception("Back parameter must contain a valid usStock");
+			}
+			if (amParam.exUsStock == null) {
+				throw new Exception("Back parameter must contain a valid exusStock");
+			}
+			if (amParam.bondStock == null) {
+				throw new Exception("Back parameter must contain a valid bondStock");
+			}
+
+		} else {
+			throw new Exception("Wrong strategy parameter type : AcceleratedMomentumParameters required !");
 		}
 
 	}
 
-	private FinStock getNextStock(LocalDate lastDayOfMonth, Map<String, Object> parameters) {
+	private FinStock getNextStock(LocalDate lastDayOfMonth, AcceleratedMomentumParameters parameters) {
 
-		FinStock usStock = stockService.getByCode(parameters.get(US_STOCK).toString());
-		FinStock exUsStock = stockService.getByCode(parameters.get(EX_US_STOCK).toString());
-		FinStock bondStock = stockService.getByCode(parameters.get(BOND_STOCK).toString());
+		FinStock usStock = stockService.getByCode(parameters.usStock);
+		FinStock exUsStock = stockService.getByCode(parameters.exUsStock);
+		FinStock bondStock = stockService.getByCode(parameters.bondStock);
 
 		StockIndicator usStockIndicator = stockIndicatorService.findFirstIndicatorBefore(usStock.code, lastDayOfMonth,
 				lastDayOfMonth.minusMonths(1));

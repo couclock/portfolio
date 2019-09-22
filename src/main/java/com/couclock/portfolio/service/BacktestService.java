@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.couclock.portfolio.entity.Backtest;
-import com.couclock.portfolio.entity.strategies.Strategy;
+import com.couclock.portfolio.entity.strategies.StrategyParameters.STRATEGY;
 import com.couclock.portfolio.repository.BacktestRepository;
 import com.couclock.portfolio.service.strategies.AcceleratedMomentumStrategy;
 
@@ -40,7 +40,7 @@ public class BacktestService {
 
 		Backtest bt = check.get();
 
-		if (bt.strategyCode.equals(Strategy.ACCELERATED_MOMENTUM)) {
+		if (bt.strategyCode.equals(STRATEGY.ACCELERATED_MOMENTUM)) {
 			acceleratedMomentumStrategy.continueBacktest(bt);
 		}
 

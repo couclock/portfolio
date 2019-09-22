@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.couclock.portfolio.entity.Portfolio;
 import com.couclock.portfolio.entity.PortfolioHistory;
-import com.couclock.portfolio.entity.strategies.AcceleratedMomentumStrategy;
+import com.couclock.portfolio.entity.strategies.AcceleratedMomentumParameters;
 import com.couclock.portfolio.entity.sub.PortfolioEvent;
 import com.couclock.portfolio.service.PortfolioService;
 import com.couclock.portfolio.service.StrategyService;
@@ -137,7 +137,7 @@ public class PortfolioController {
 		portfolio.code = newPortfolio.code;
 		portfolio.startDate = newPortfolio.startDate;
 		portfolio.strategyParameters = newPortfolio.strategyParameters;
-		portfolio.strategyParameters.portfolio = portfolio;
+		// portfolio.strategyParameters.portfolio = portfolio;
 
 		portfolioService.initPortfolio(portfolio);
 
@@ -165,10 +165,10 @@ public class PortfolioController {
 
 			portfolioService.initPortfolio(portfolio);
 
-			AcceleratedMomentumStrategy strategyParameters = new AcceleratedMomentumStrategy();
-			strategyParameters.addUsStock(1, usStockCode);
-			strategyParameters.addExUsStock(1, exUsStockCode);
-			strategyParameters.addBondStock(1, bondStockCode);
+			AcceleratedMomentumParameters strategyParameters = new AcceleratedMomentumParameters();
+//			strategyParameters.addUsStock(1, usStockCode);
+//			strategyParameters.addExUsStock(1, exUsStockCode);
+//			strategyParameters.addBondStock(1, bondStockCode);
 			portfolio.strategyParameters = strategyParameters;
 
 			portfolioService.upsert(portfolio);

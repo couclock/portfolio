@@ -1,7 +1,6 @@
 package com.couclock.portfolio.service;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -18,7 +17,6 @@ import com.couclock.portfolio.entity.PortfolioStatus.MyCurrentStock;
 import com.couclock.portfolio.entity.StockDistribution;
 import com.couclock.portfolio.entity.StockHistory;
 import com.couclock.portfolio.entity.StockIndicator;
-import com.couclock.portfolio.entity.strategies.AcceleratedMomentumStrategy;
 
 /**
  *
@@ -38,115 +36,115 @@ public class StrategyService {
 
 	public Portfolio acceleratedDualMomentum(Portfolio pf) throws Exception {
 
-		LocalDate currentDate = LocalDate.from(pf.endDate);
-		LocalDate targetDate = LocalDate.now().plusDays(1); // To stop loop after considering today
-		PortfolioStatus pfStatus = pf.currentStatus;
-
-		AcceleratedMomentumStrategy strategyParameters = (AcceleratedMomentumStrategy) pf.strategyParameters;
-
-		List<StockDistribution> usStocks = strategyParameters.usStocks;
-		List<StockDistribution> exUsStocks = strategyParameters.exUsStocks;
-		List<StockDistribution> bondStocks = strategyParameters.bondStocks;
-
-		Map<String, Map<LocalDate, StockHistory>> stock2H = new HashMap<>();
-		Map<String, Map<LocalDate, StockIndicator>> stock2I = new HashMap<>();
-		pf.strategyParameters.getStockList().forEach(oneStock -> {
-			stock2H.put(oneStock, stockHistoryService.getAllByStockCode_Map(oneStock));
-			stock2I.put(oneStock, stockIndicatorService.getAllByStockCode_Map(oneStock));
-		});
-
-		while (currentDate.isBefore(targetDate)) {
-
-			boolean monthLastDay = currentDate.plusDays(1).getDayOfMonth() == 1;
-
-			// On month last day, calculate momentums
-			if (monthLastDay) {
-
-				List<StockDistribution> targetStocks = getToBuyStockOnNextMonthStart(currentDate, stock2H, stock2I,
-						usStocks, exUsStocks, bondStocks);
-				targetStocks.forEach(oneTargetStock -> {
-					pfStatus.toSell.remove(oneTargetStock.stockCode);
-				});
-				// We consider if at least a targetStock is in current PF, all targetStocks are
-				// in
-				if (!targetStocks.isEmpty() && pfStatus.containStock(targetStocks.get(0).stockCode)) {
-					;
-				} else {
-					pfStatus.toBuy.clear();
-					pfStatus.toBuy.addAll(targetStocks);
-					pfStatus.currentStocks.forEach(oneCurrentStock -> {
-						if (!pfStatus.toSell.contains(oneCurrentStock.stockCode)) {
-							pfStatus.toSell.add(oneCurrentStock.stockCode);
-						}
-					});
-				}
-				log.info("Selected targetStock for next month [" + currentDate + "] : " + targetStocks);
-
-			}
-
-			// Check protection rules
-			checkProtectionRules(currentDate, pfStatus, stock2H, stock2I, strategyParameters.ema6MonthsProtectionRatio);
-
-			final LocalDate curDate = currentDate;
-
-			// Try to sell what you should
-			if (!monthLastDay && !pfStatus.toSell.isEmpty()) {
-				List<String> stockToSellToday = pfStatus.toSell.stream() //
-						.filter(oneStockCode -> stock2H.get(oneStockCode).containsKey(curDate)) //
-						.collect(Collectors.toList());
-
-				stockToSellToday.forEach(oneStockToSell -> {
-					StockHistory oneHistory = stock2H.get(oneStockToSell).get(curDate);
-					log.info("toSell stock history : " + oneHistory);
-					pfStatus.money += oneHistory.open * pfStatus.getStock(oneStockToSell).count;
-					pf.addSellEvent(oneHistory.date, pfStatus.getStock(oneStockToSell).count, oneStockToSell);
-					pfStatus.removeStock(oneStockToSell);
-				});
-				pfStatus.toSell.removeAll(stockToSellToday);
-			}
-
-			// Try to buy what you should when all stock to sell are sold
-			if (!monthLastDay && !pfStatus.toBuy.isEmpty() && pfStatus.toSell.isEmpty()) {
-				List<StockDistribution> stockToBuyToday = pfStatus.toBuy.stream() //
-						.filter(oneStockToBuy -> stock2H.get(oneStockToBuy.stockCode).containsKey(curDate)) //
-						.collect(Collectors.toList());
-
-				if (stockToBuyToday.size() != pfStatus.toBuy.size()) {
-					log.error("Stock distribution will be invalid ...");
-				}
-
-				final double moneyToBuy = pfStatus.money;
-
-				stockToBuyToday.forEach(oneStockToBuy -> {
-					StockHistory oneHistory = stock2H.get(oneStockToBuy.stockCode).get(curDate);
-					log.info("toBuy stock history : " + oneHistory);
-
-					long count = Math.round(Math.floor((moneyToBuy * oneStockToBuy.percent) / oneHistory.open));
-					if (count > 0) {
-						pfStatus.addStock(count, oneStockToBuy.stockCode);
-						pfStatus.money -= count * oneHistory.open;
-						pf.addBuyEvent(curDate, count, oneStockToBuy.stockCode);
-
-					}
-				});
-
-				pfStatus.toBuy.removeAll(stockToBuyToday);
-			}
-
-			PortfolioHistory todayH = getTodayHistory(curDate, pfStatus, stock2H);
-			if (todayH != null) {
-				pf.history.add(todayH);
-			}
-
-			log.debug("PF status [" + currentDate + "] : " + pfStatus);
-
-			currentDate = currentDate.plusDays(1);
-		}
-
-		pf.endDate = pf.history.get(pf.history.size() - 1).date;
-		pf.endMoney = pf.history.get(pf.history.size() - 1).value;
-		pf.currentStatus = pfStatus;
-		log.warn("FINAL pf : " + pf);
+//		LocalDate currentDate = LocalDate.from(pf.endDate);
+//		LocalDate targetDate = LocalDate.now().plusDays(1); // To stop loop after considering today
+//		PortfolioStatus pfStatus = pf.currentStatus;
+//
+//		AcceleratedMomentumParameters strategyParameters = (AcceleratedMomentumParameters) pf.strategyParameters;
+//
+//		List<StockDistribution> usStocks = strategyParameters.usStocks;
+//		List<StockDistribution> exUsStocks = strategyParameters.exUsStocks;
+//		List<StockDistribution> bondStocks = strategyParameters.bondStocks;
+//
+//		Map<String, Map<LocalDate, StockHistory>> stock2H = new HashMap<>();
+//		Map<String, Map<LocalDate, StockIndicator>> stock2I = new HashMap<>();
+//		pf.strategyParameters.getStockList().forEach(oneStock -> {
+//			stock2H.put(oneStock, stockHistoryService.getAllByStockCode_Map(oneStock));
+//			stock2I.put(oneStock, stockIndicatorService.getAllByStockCode_Map(oneStock));
+//		});
+//
+//		while (currentDate.isBefore(targetDate)) {
+//
+//			boolean monthLastDay = currentDate.plusDays(1).getDayOfMonth() == 1;
+//
+//			// On month last day, calculate momentums
+//			if (monthLastDay) {
+//
+//				List<StockDistribution> targetStocks = getToBuyStockOnNextMonthStart(currentDate, stock2H, stock2I,
+//						usStocks, exUsStocks, bondStocks);
+//				targetStocks.forEach(oneTargetStock -> {
+//					pfStatus.toSell.remove(oneTargetStock.stockCode);
+//				});
+//				// We consider if at least a targetStock is in current PF, all targetStocks are
+//				// in
+//				if (!targetStocks.isEmpty() && pfStatus.containStock(targetStocks.get(0).stockCode)) {
+//					;
+//				} else {
+//					pfStatus.toBuy.clear();
+//					pfStatus.toBuy.addAll(targetStocks);
+//					pfStatus.currentStocks.forEach(oneCurrentStock -> {
+//						if (!pfStatus.toSell.contains(oneCurrentStock.stockCode)) {
+//							pfStatus.toSell.add(oneCurrentStock.stockCode);
+//						}
+//					});
+//				}
+//				log.info("Selected targetStock for next month [" + currentDate + "] : " + targetStocks);
+//
+//			}
+//
+//			// Check protection rules
+//			checkProtectionRules(currentDate, pfStatus, stock2H, stock2I, strategyParameters.ema6MonthsProtectionRatio);
+//
+//			final LocalDate curDate = currentDate;
+//
+//			// Try to sell what you should
+//			if (!monthLastDay && !pfStatus.toSell.isEmpty()) {
+//				List<String> stockToSellToday = pfStatus.toSell.stream() //
+//						.filter(oneStockCode -> stock2H.get(oneStockCode).containsKey(curDate)) //
+//						.collect(Collectors.toList());
+//
+//				stockToSellToday.forEach(oneStockToSell -> {
+//					StockHistory oneHistory = stock2H.get(oneStockToSell).get(curDate);
+//					log.info("toSell stock history : " + oneHistory);
+//					pfStatus.money += oneHistory.open * pfStatus.getStock(oneStockToSell).count;
+//					pf.addSellEvent(oneHistory.date, pfStatus.getStock(oneStockToSell).count, oneStockToSell);
+//					pfStatus.removeStock(oneStockToSell);
+//				});
+//				pfStatus.toSell.removeAll(stockToSellToday);
+//			}
+//
+//			// Try to buy what you should when all stock to sell are sold
+//			if (!monthLastDay && !pfStatus.toBuy.isEmpty() && pfStatus.toSell.isEmpty()) {
+//				List<StockDistribution> stockToBuyToday = pfStatus.toBuy.stream() //
+//						.filter(oneStockToBuy -> stock2H.get(oneStockToBuy.stockCode).containsKey(curDate)) //
+//						.collect(Collectors.toList());
+//
+//				if (stockToBuyToday.size() != pfStatus.toBuy.size()) {
+//					log.error("Stock distribution will be invalid ...");
+//				}
+//
+//				final double moneyToBuy = pfStatus.money;
+//
+//				stockToBuyToday.forEach(oneStockToBuy -> {
+//					StockHistory oneHistory = stock2H.get(oneStockToBuy.stockCode).get(curDate);
+//					log.info("toBuy stock history : " + oneHistory);
+//
+//					long count = Math.round(Math.floor((moneyToBuy * oneStockToBuy.percent) / oneHistory.open));
+//					if (count > 0) {
+//						pfStatus.addStock(count, oneStockToBuy.stockCode);
+//						pfStatus.money -= count * oneHistory.open;
+//						pf.addBuyEvent(curDate, count, oneStockToBuy.stockCode);
+//
+//					}
+//				});
+//
+//				pfStatus.toBuy.removeAll(stockToBuyToday);
+//			}
+//
+//			PortfolioHistory todayH = getTodayHistory(curDate, pfStatus, stock2H);
+//			if (todayH != null) {
+//				pf.history.add(todayH);
+//			}
+//
+//			log.debug("PF status [" + currentDate + "] : " + pfStatus);
+//
+//			currentDate = currentDate.plusDays(1);
+//		}
+//
+//		pf.endDate = pf.history.get(pf.history.size() - 1).date;
+//		pf.endMoney = pf.history.get(pf.history.size() - 1).value;
+//		pf.currentStatus = pfStatus;
+//		log.warn("FINAL pf : " + pf);
 
 		return pf;
 

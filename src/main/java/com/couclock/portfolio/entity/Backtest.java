@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -17,8 +16,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OrderBy;
 
-import com.couclock.portfolio.converter.HashMapConverter;
-import com.couclock.portfolio.entity.strategies.Strategy;
+import com.couclock.portfolio.converter.StrategyParametersConverter;
+import com.couclock.portfolio.entity.strategies.StrategyParameters;
 
 @Entity
 public class Backtest implements Serializable {
@@ -43,9 +42,9 @@ public class Backtest implements Serializable {
 
 	@Enumerated(EnumType.STRING)
 	@Column(length = 25)
-	public Strategy strategyCode;
+	public StrategyParameters.STRATEGY strategyCode;
 
-	@Convert(converter = HashMapConverter.class)
-	public Map<String, Object> strategyParameters;
+	@Convert(converter = StrategyParametersConverter.class)
+	public StrategyParameters strategyParameters;
 
 }

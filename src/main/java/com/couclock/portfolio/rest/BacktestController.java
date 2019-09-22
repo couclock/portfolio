@@ -1,22 +1,22 @@
 package com.couclock.portfolio.rest;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.couclock.portfolio.entity.Backtest;
-import com.couclock.portfolio.entity.strategies.Strategy;
+import com.couclock.portfolio.entity.strategies.AcceleratedMomentumParameters;
+import com.couclock.portfolio.entity.strategies.StrategyParameters.STRATEGY;
 import com.couclock.portfolio.repository.BacktestRepository;
 import com.couclock.portfolio.service.BacktestService;
-import com.couclock.portfolio.service.strategies.AcceleratedMomentumStrategy;
 
 @RestController
 @RequestMapping("/backtests")
@@ -72,19 +72,27 @@ public class BacktestController {
 		bt.startMoney = 10000;
 		bt.currentMoney = 10000;
 		bt.startDate = LocalDate.parse("2016-01-01");
-		bt.strategyCode = Strategy.ACCELERATED_MOMENTUM;
-		bt.strategyParameters = new HashMap<>();
-		bt.strategyParameters.put(AcceleratedMomentumStrategy.US_STOCK, "500");
-		bt.strategyParameters.put(AcceleratedMomentumStrategy.EX_US_STOCK, "MMS");
-		bt.strategyParameters.put(AcceleratedMomentumStrategy.BOND_STOCK, "EVOE");
+		bt.strategyCode = STRATEGY.ACCELERATED_MOMENTUM;
 
-//		BacktestTransaction btt = new BacktestTransaction();
-//		btt.buyDate = LocalDate.parse("2018-02-06");
-//		btt.quantity = 12;
-//		btt.stock = stockRepository.findByCodeIgnoreCase("500");
-//		bt.transactions.add(btt);
+		AcceleratedMomentumParameters parameters = new AcceleratedMomentumParameters();
+		parameters.usStock = "500";
+		parameters.exUsStock = "MMS";
+		parameters.bondStock = "EVOE";
+
+		bt.strategyParameters = parameters;
 
 		backtestRepository.save(bt);
+
+		return "ok";
+
+	}
+
+	@RequestMapping(value = "/", method = RequestMethod.POST)
+	public String create(@RequestBody Backtest backtest) throws Exception {
+
+		Backtest savedBacktest = backtestService.upsert(backtest);
+
+		backtestService.continueBacktest(savedBacktest.id);
 
 		return "ok";
 

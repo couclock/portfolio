@@ -91,12 +91,12 @@ public class StockService {
 		}
 		String stockCode = stock.get().code;
 		List<Portfolio> portfolios = portfolioService.getAll();
-		for (Portfolio onePortfolio : portfolios) {
-			if (onePortfolio.strategyParameters.getStockList().contains(stockCode)) {
-				throw new Exception(
-						"'" + stockCode + "' stock cannot be deleted : used by '" + onePortfolio.code + "' portfolio");
-			}
-		}
+//		for (Portfolio onePortfolio : portfolios) {
+//			if (onePortfolio.strategyParameters.getStockList().contains(stockCode)) {
+//				throw new Exception(
+//						"'" + stockCode + "' stock cannot be deleted : used by '" + onePortfolio.code + "' portfolio");
+//			}
+//		}
 
 		stockRepository.deleteById(stockId);
 	}
