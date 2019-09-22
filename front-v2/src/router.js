@@ -3,6 +3,7 @@ import Router from 'vue-router'
 import Home from './views/Home.vue'
 import BacktestList from './views/BacktestList.vue'
 import BacktestSettings from './views/BacktestSettings.vue'
+import BacktestDetail from './views/BacktestDetail.vue'
 
 Vue.use(Router)
 
@@ -24,6 +25,11 @@ export default new Router({
       path: '/backtest-settings',
       name: 'backtest-settings',
       component: BacktestSettings
+    },
+    {
+      path: '/backtest-detail/:id',
+      name: 'backtest-detail',
+      component: BacktestDetail
     },
     {
       path: '/about',

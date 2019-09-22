@@ -3,7 +3,7 @@
   <v-app id="inspire">
     <v-navigation-drawer v-model="drawer" app>
       <v-list dense>
-        <v-list-item @click="$router.push('home')">
+        <v-list-item @click="$router.push({name:'home'})">
           <v-list-item-action>
             <v-icon>mdi-home</v-icon>
           </v-list-item-action>
@@ -13,7 +13,7 @@
         </v-list-item>
 
         <!-- Backtest list -->
-        <v-list-item @click="$router.push('backtest-list')">
+        <v-list-item @click="$router.push({name:'backtest-list'})">
           <v-list-item-action>
             <v-icon>mdi-home</v-icon>
           </v-list-item-action>
@@ -22,7 +22,7 @@
           </v-list-item-content>
         </v-list-item>
 
-        <v-list-item @click="$router.push('about')">
+        <v-list-item @click="$router.push({name:'about'})">
           <v-list-item-action>
             <v-icon>mdi-contact-mail</v-icon>
           </v-list-item-action>

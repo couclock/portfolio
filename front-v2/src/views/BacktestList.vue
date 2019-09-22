@@ -10,7 +10,11 @@
         class="elevation-1"
       >
         <template v-slot:item.action="{ item }">
-          <v-icon small class="mr-2" @click="editItem(item)">mdi-eye</v-icon>
+          <v-icon
+            small
+            class="mr-2"
+            @click="$router.push({name:'backtest-detail', params:{id:item.id}})"
+          >mdi-eye</v-icon>
           <v-icon small class="mr-2" @click="editItem(item)">mdi-pencil</v-icon>
           <v-icon small class="mr-2" @click="deleteItem(item)">mdi-content-copy</v-icon>
           <v-icon small color="error" @click="deleteItem(item)">mdi-delete</v-icon>
