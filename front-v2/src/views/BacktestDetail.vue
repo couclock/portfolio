@@ -18,10 +18,7 @@
       </v-row>
       <v-row justify="center">
         <v-col cols="6">
-          <v-card>
-            <v-card-title>Transactions</v-card-title>
-            <v-card-text>I'm card text</v-card-text>
-          </v-card>
+          <BacktestTransactions v-if="backtest" :backtest="backtest"></BacktestTransactions>
         </v-col>
       </v-row>
     </v-col>
@@ -32,6 +29,7 @@
 <script>
 import BacktestMetadata from "@/components/BacktestMetadata";
 import BacktestResults from "@/components/BacktestResults";
+import BacktestTransactions from "@/components/BacktestTransactions";
 
 export default {
   name: "backtestDetail",
@@ -58,7 +56,8 @@ export default {
   },
   components: {
     BacktestMetadata,
-    BacktestResults
+    BacktestResults,
+    BacktestTransactions
   }
 };
 </script>
