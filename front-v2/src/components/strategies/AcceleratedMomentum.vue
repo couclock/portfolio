@@ -19,23 +19,25 @@ import SelectStock from "@/components/strategies/accelerated-momentum/SelectStoc
 
 export default {
   name: "AcceleratedMomentum",
-  props: { value: Object }, // Mandatory : structure {valid: Boolean, settings: Object }
+  props: { value: Object }, // Mandatory : structure {valid: Boolean, strategyParameters: Object }
   data() {
     return {
       strategyParameters: {
         className:
           "com.couclock.portfolio.entity.strategies.AcceleratedMomentumParameters",
         usStock:
-          this.value.settings && this.value.settings.usStock
-            ? this.value.settings.usStock
+          this.value.strategyParameters && this.value.strategyParameters.usStock
+            ? this.value.strategyParameters.usStock
             : null,
         exUsStock:
-          this.value.settings && this.value.settings.exUsStock
-            ? this.value.settings.exUsStock
+          this.value.strategyParameters &&
+          this.value.strategyParameters.exUsStock
+            ? this.value.strategyParameters.exUsStock
             : null,
         bondStock:
-          this.value.settings && this.value.settings.bondStock
-            ? this.value.settings.bondStock
+          this.value.strategyParameters &&
+          this.value.strategyParameters.bondStock
+            ? this.value.strategyParameters.bondStock
             : null
       }
     };

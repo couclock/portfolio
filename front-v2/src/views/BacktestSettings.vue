@@ -7,6 +7,7 @@
         <v-col cols="8">
           <v-select
             outlined
+            v-model="currentStrategy"
             :items="strategies"
             clearable
             label="Stratégie"
@@ -59,7 +60,6 @@ export default {
       strategies: ["ACCELERATED_MOMENTUM"],
       currentStrategy: undefined,
       currentStrategySettings: undefined,
-      //currentStrategySettings: AcceleratedMomentum,
       settings: { valid: false },
       startMoney: 10000,
       startDate: "2016-01-01"
@@ -83,6 +83,7 @@ export default {
       this.isLoading = true;
       this.axios
         .post("/backtests/", {
+          id: this.$route.params.id,
           startMoney: this.startMoney,
           startDate: this.startDate,
           strategyCode: this.currentStrategy,
@@ -99,7 +100,24 @@ export default {
         .finally(() => (this.isLoading = false));
     }
   },
-  created() {}
+  created() {
+    if (this.$route.params.id) {
+      this.axios
+        .get("/backtests/" + this.$route.params.id)
+        .then(response => {
+          this.startMoney = response.data.startMoney;
+          this.startDate = response.data.startDate;
+          this.settings.valid = true;
+          this.settings.strategyParameters = response.data.strategyParameters;
+          this.updateStrategyForm(response.data.strategyCode);
+        })
+        .catch(err => {
+          // eslint-disable-next-line
+          console.log(err);
+        })
+        .finally(() => {});
+    }
+  }
 };
 </script>
 

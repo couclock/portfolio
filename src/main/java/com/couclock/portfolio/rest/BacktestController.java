@@ -88,13 +88,13 @@ public class BacktestController {
 	}
 
 	@RequestMapping(value = "/", method = RequestMethod.POST)
-	public String create(@RequestBody Backtest backtest) throws Exception {
+	public Backtest upsert(@RequestBody Backtest backtest) throws Exception {
 
 		Backtest savedBacktest = backtestService.upsert(backtest);
 
-		backtestService.continueBacktest(savedBacktest.id);
+		savedBacktest = backtestService.continueBacktest(savedBacktest.id);
 
-		return "ok";
+		return savedBacktest;
 
 	}
 

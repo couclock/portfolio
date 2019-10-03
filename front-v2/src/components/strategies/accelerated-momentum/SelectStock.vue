@@ -4,17 +4,16 @@
     v-model="model"
     :items="items"
     :loading="isLoading"
-    :search-input.sync="search"
     hide-no-data
     hide-selected
     item-text="label"
     item-value="code"
     :label="title"
     clearable
-    placeholder="Start typing to Search"
+    placeholder="Start typing to Search "
     prepend-icon="mdi-database-search"
     @change="updateSelectedStock"
-  ></v-autocomplete>
+  >{{model }}</v-autocomplete>
 </template>
 
 <!-- Script ------------------------------------------------------------------------------------------->
@@ -22,12 +21,14 @@
 export default {
   name: "SelectStock",
   props: { title: String, tag: String, value: String },
-  data: () => ({
-    isLoading: false,
-    entries: [],
-    search: null,
-    model: null
-  }),
+  data() {
+    return {
+      isLoading: false,
+      entries: [],
+      search: null,
+      model: this.value ? this.value : null
+    };
+  },
   computed: {
     items() {
       return this.entries.map(entry => {
@@ -44,29 +45,28 @@ export default {
       this.$emit("input", selectedStock);
     }
   },
-  watch: {
-    search() {
-      // Items have already been loaded
-      if (this.items.length > 0) return;
 
-      // Items have already been requested
-      if (this.isLoading) return;
+  created() {
+    // Items have already been loaded
+    if (this.items.length > 0) return;
 
-      this.isLoading = true;
+    // Items have already been requested
+    if (this.isLoading) return;
 
-      // Lazily load input items
-      this.axios
-        .get("/stocks/by-tag/" + this.tag)
-        .then(response => {
-          this.entries = response.data;
-          this.loading = false;
-        })
-        .catch(err => {
-          // eslint-disable-next-line
-          console.log(err);
-        })
-        .finally(() => (this.isLoading = false));
-    }
+    this.isLoading = true;
+
+    // Lazily load input items
+    this.axios
+      .get("/stocks/by-tag/" + this.tag)
+      .then(response => {
+        this.entries = response.data;
+        this.loading = false;
+      })
+      .catch(err => {
+        // eslint-disable-next-line
+        console.log(err);
+      })
+      .finally(() => (this.isLoading = false));
   }
 };
 </script>

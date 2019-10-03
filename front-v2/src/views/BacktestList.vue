@@ -15,9 +15,13 @@
             class="mr-2"
             @click="$router.push({name:'backtest-detail', params:{id:item.id}})"
           >mdi-eye</v-icon>
-          <v-icon small class="mr-2" @click="editItem(item)">mdi-pencil</v-icon>
-          <v-icon small class="mr-2" @click="deleteItem(item)">mdi-content-copy</v-icon>
-          <v-icon small color="error" @click="deleteItem(item)">mdi-delete</v-icon>
+          <v-icon
+            small
+            class="mr-2"
+            @click="$router.push({name:'backtest-settings-update', params:{id:item.id}})"
+          >mdi-pencil</v-icon>
+          <v-icon small class="mr-2">mdi-content-copy</v-icon>
+          <v-icon small color="error" @click="deleteBacktest(item.id)">mdi-delete</v-icon>
         </template>
       </v-data-table>
     </v-col>
@@ -68,10 +72,24 @@ export default {
   },
   methods: {
     loadBacktestList() {
+      this.loading = true;
       this.axios.get("/backtests/").then(response => {
         this.backtestList = response.data;
         this.loading = false;
       });
+    },
+    deleteBacktest(backtestId) {
+      this.axios
+        .delete("/backtests/" + backtestId)
+        .then(response => {
+          // eslint-disable-next-line
+          console.log("ok deleted : ", response);
+          this.loadBacktestList();
+        })
+        .catch(err => {
+          // eslint-disable-next-line
+          console.log(err);
+        });
     }
   },
   created() {

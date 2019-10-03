@@ -22,8 +22,13 @@ export default new Router({
       component: BacktestList
     },
     {
+      path: '/backtest-settings/:id',
+      name: 'backtest-settings-update',
+      component: BacktestSettings
+    },
+    {
       path: '/backtest-settings',
-      name: 'backtest-settings',
+      name: 'backtest-settings-new',
       component: BacktestSettings
     },
     {
