@@ -184,6 +184,29 @@ public class StockController {
 				.collect(Collectors.toList());
 
 	}
+	
+	@RequestMapping(method = RequestMethod.POST, value = "/refresh")
+	public List<LightStockDTO> refreshAll() throws IOException {
+
+		return stockService.getAll().stream() //
+				.map(oneStock -> {
+					try {
+						boursoService.updateOneStockHistory(oneStock);
+						yahooService.updateOneStockHistory(oneStock, true);
+						stockIndicatorService.updateIndicators(oneStock, false);
+
+					} catch (Exception e) {
+						throw new RuntimeException("ERROR refreshAll", e);
+					}
+					return new LightStockDTO( //
+							oneStock, //
+							stockHistoryService.getLatestHistoryById(oneStock.id), //
+							stockIndicatorService.getLatestIndicatorById(oneStock.id));
+
+				}) //
+				.collect(Collectors.toList());
+
+	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/update-history-yahoo")
 	public List<LightStockDTO> updateHistoryYahoo(@RequestBody List<Long> stockIds) throws IOException {

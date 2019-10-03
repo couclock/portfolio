@@ -20,7 +20,7 @@
             class="mr-2"
             @click="$router.push({name:'backtest-settings-update', params:{id:item.id}})"
           >mdi-pencil</v-icon>
-          <v-icon small class="mr-2">mdi-content-copy</v-icon>
+          <v-icon small disabled class="mr-2">mdi-content-copy</v-icon>
           <v-icon small color="error" @click="deleteBacktest(item.id)">mdi-delete</v-icon>
         </template>
       </v-data-table>

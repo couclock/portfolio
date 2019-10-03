@@ -1,18 +1,43 @@
 <template>
   <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <img alt="Vue logo" src="../assets/logo.png" />
+    <v-btn
+      :loading="loading"
+      :disabled="loading"
+      large
+      block
+      color="primary"
+      @click="updateStocks"
+    >Update stocks</v-btn>
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
-import HelloWorld from '@/components/HelloWorld.vue'
-
 export default {
-  name: 'home',
-  components: {
-    HelloWorld
-  }
-}
+  name: "home",
+  data() {
+    return {
+      loading: false
+    };
+  },
+  methods: {
+    updateStocks() {
+      this.loading = true;
+      this.axios
+        .post("/stocks/refresh")
+        .then(response => {
+          // eslint-disable-next-line
+          console.log("ok : ", response);
+        })
+        .catch(err => {
+          // eslint-disable-next-line
+          console.log(err);
+        })
+        .finally(() => {
+          this.loading = false;
+        });
+    }
+  },
+  components: {}
+};
 </script>
