@@ -86,6 +86,7 @@ export default {
           id: this.$route.params.id,
           startMoney: this.startMoney,
           startDate: this.startDate,
+          currentMoney: this.startMoney,
           strategyCode: this.currentStrategy,
           strategyParameters: this.settings.strategyParameters
         })

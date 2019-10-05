@@ -11,6 +11,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -36,7 +37,7 @@ public class Backtest implements Serializable {
 	public LocalDate startDate;
 	public LocalDate endDate;
 
-	@ElementCollection
+	@ElementCollection(fetch = FetchType.EAGER)
 	@OrderBy("buyDate")
 	public List<BacktestTransaction> transactions = new ArrayList<>();
 
