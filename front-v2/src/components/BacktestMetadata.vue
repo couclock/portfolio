@@ -1,7 +1,13 @@
 <!-- Template ------------------------------------------------------------------------------------------->
 <template>
   <v-card>
-    <v-card-title>Paramètres</v-card-title>
+    <v-card-title>
+      Paramètres&nbsp;&nbsp;
+      <v-icon
+        class="mr-2"
+        @click="$router.push({name:'backtest-settings-update', params:{id:backtest.id}})"
+      >mdi-settings</v-icon>
+    </v-card-title>
     <v-card-text>
       <v-row>
         <v-col cols="6">Stratégie</v-col>

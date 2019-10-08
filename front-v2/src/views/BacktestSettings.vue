@@ -43,6 +43,7 @@
             @click="saveBacktestSettings"
           >Lancer le backtest</v-btn>
         </v-col>
+        <ErrorDialog v-model="showErrorDialog" :errorResponse="errorResponse"></ErrorDialog>
       </v-row>
     </v-col>
   </v-row>
@@ -51,6 +52,7 @@
 <!-- Script ------------------------------------------------------------------------------------------->
 <script>
 import AcceleratedMomentum from "@/components/strategies/AcceleratedMomentum.vue";
+import ErrorDialog from "@/components/ErrorDialog";
 
 export default {
   name: "backtestSettings",
@@ -62,7 +64,9 @@ export default {
       currentStrategySettings: undefined,
       settings: { valid: false },
       startMoney: 10000,
-      startDate: "2016-01-01"
+      startDate: "2016-01-01",
+      errorResponse: null,
+      showErrorDialog: false
     };
   },
   computed: {
@@ -93,10 +97,16 @@ export default {
         .then(response => {
           // eslint-disable-next-line
           console.log("ok : ", response);
+          this.$router.push({
+            name: "backtest-detail",
+            params: { id: response.data.id }
+          });
         })
         .catch(err => {
           // eslint-disable-next-line
-          console.log(err);
+          console.log("ERROR : " + err);
+          this.errorResponse = err;
+          this.showErrorDialog = true;
         })
         .finally(() => (this.isLoading = false));
     }
@@ -118,6 +128,9 @@ export default {
         })
         .finally(() => {});
     }
+  },
+  components: {
+    ErrorDialog
   }
 };
 </script>
