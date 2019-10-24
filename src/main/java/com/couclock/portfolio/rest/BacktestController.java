@@ -64,6 +64,15 @@ public class BacktestController {
 		return null;
 
 	}
+	
+	@RequestMapping(value = "/{backtestId}/history", method = RequestMethod.GET)
+	public List<List<Number>> getBacktestHistory(@PathVariable(value = "backtestId") Long backtestId) throws Exception {
+
+		List<List<Number>> check = backtestService.getBacktestHistory(backtestId);
+		
+		return check;
+
+	}
 
 	@RequestMapping("/init")
 	public String init() throws Exception {

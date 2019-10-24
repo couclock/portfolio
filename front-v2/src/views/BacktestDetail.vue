@@ -12,7 +12,9 @@
         <v-col cols="8">
           <v-card>
             <v-card-title>Courbe</v-card-title>
-            <v-card-text>I'm card text</v-card-text>
+            <v-card-text>
+              <highcharts :constructor-type="'stockChart'" :options="chartOptions"></highcharts>
+            </v-card-text>
           </v-card>
         </v-col>
       </v-row>
@@ -31,22 +33,99 @@ import BacktestMetadata from "@/components/BacktestMetadata";
 import BacktestResults from "@/components/BacktestResults";
 import BacktestTransactions from "@/components/BacktestTransactions";
 
+import { parseISO, getTime } from "date-fns";
+
+import { Chart } from "highcharts-vue";
+
 export default {
   name: "backtestDetail",
   data() {
     return {
-      backtest: null
+      backtest: null,
+      chartOptions: {
+        series: [
+          {
+            name: "backtest",
+            data: [],
+            lineWidth: 2,
+            color: "red"
+          },
+          {
+            lineWidth: 1,
+            data: []
+          },
+          {
+            lineWidth: 1,
+            data: []
+          },
+          {
+            lineWidth: 1,
+            data: []
+          }
+        ]
+      }
     };
   },
   computed: {},
-  methods: {},
-  created() {
+  methods: {
+    getStockHistory(stockCode, startMoney, startDate, graphIdx) {
+      this.axios
+        .get(
+          "/stocks/" +
+            stockCode +
+            "/graph-history/" +
+            startMoney +
+            "/" +
+            startDate
+        )
+        .then(response => {
+          this.chartOptions.series[graphIdx].name = stockCode;
+          this.chartOptions.series[graphIdx].data = response.data;
+        })
+        .catch(err => {
+          // eslint-disable-next-line
+          console.log(err);
+        })
+        .finally(() => {});
+    }
+  },
+  mounted() {
     this.axios
       .get("/backtests/" + this.$route.params.id)
       .then(response => {
         // eslint-disable-next-line
         console.log("ok : ", response);
         this.backtest = response.data;
+        this.getStockHistory(
+          this.backtest.strategyParameters.usStock,
+          this.backtest.startMoney,
+          this.backtest.startDate,
+          1
+        );
+        this.getStockHistory(
+          this.backtest.strategyParameters.exUsStock,
+          this.backtest.startMoney,
+          this.backtest.startDate,
+          2
+        );
+        this.getStockHistory(
+          this.backtest.strategyParameters.bondStock,
+          this.backtest.startMoney,
+          this.backtest.startDate,
+          3
+        );
+      })
+      .catch(err => {
+        // eslint-disable-next-line
+        console.log(err);
+      })
+      .finally(() => {});
+    this.axios
+      .get("/backtests/" + this.$route.params.id + "/history")
+      .then(response => {
+        // eslint-disable-next-line
+        console.log("ok : ", response);
+        this.chartOptions.series[0].data = response.data;
       })
       .catch(err => {
         // eslint-disable-next-line
@@ -54,10 +133,12 @@ export default {
       })
       .finally(() => {});
   },
+  created() {},
   components: {
     BacktestMetadata,
     BacktestResults,
-    BacktestTransactions
+    BacktestTransactions,
+    highcharts: Chart
   }
 };
 </script>

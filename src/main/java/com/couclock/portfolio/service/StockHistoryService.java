@@ -1,6 +1,9 @@
 package com.couclock.portfolio.service;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -146,6 +149,38 @@ public class StockHistoryService {
 
 	public List<StockHistory> getAllByStockCode(String stockCode) {
 		return stockHistoryRepository.findByStock_CodeOrderByDateDesc(stockCode);
+	}
+
+	/**
+	 * Retourne l'historique d'un ETF sous la forme attendue par la lib de graph
+	 * côté front (highcharts) Format attendu : [[timestamp1, val1], [timestamp2,
+	 * val2] ...]
+	 * 
+	 * @param stockCode
+	 * @param startMoney
+	 * @param startDate
+	 * @return
+	 */
+	public List<List<Number>> getHistoryForGraph(String stockCode, double startMoney, LocalDate startDate) {
+		List<StockHistory> history = stockHistoryRepository.findByStock_CodeAndDateAfterOrderByDateAsc(stockCode,
+				startDate);
+
+		List<List<Number>> result = new ArrayList<>();
+		double previousCloseStockValue = 0;
+		double currentValue = startMoney;
+
+		for (StockHistory stockHistory : history) {
+			if (previousCloseStockValue != 0) {
+				currentValue = currentValue
+						* (1 + (stockHistory.close - previousCloseStockValue) / previousCloseStockValue);
+			}
+			previousCloseStockValue = stockHistory.close;
+			result.add(Arrays.asList(stockHistory.date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+					currentValue));
+
+		}
+
+		return result;
 	}
 
 	public Map<LocalDate, StockHistory> getAllByStockCode_Map(String stockCode) {

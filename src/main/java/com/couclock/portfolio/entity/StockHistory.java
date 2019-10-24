@@ -7,8 +7,10 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -21,6 +23,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  *
  */
 @Entity
+@Table(indexes = { //
+		@Index(name = "SH_DATE_IDX", columnList = "date"), //
+		@Index(name = "SH_STOCK_IDX", columnList = "stock_code") //
+})
 public class StockHistory implements Comparable<StockHistory> {
 
 	@Id

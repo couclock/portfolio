@@ -59,6 +59,9 @@ public class AcceleratedMomentumStrategy extends AbstractStrategy {
 
 		while (currentDate.isBefore(LocalDate.now())) {
 			currentDate = dateUtils.getLastDayOfMonth(currentDate);
+			if (currentDate.isAfter(LocalDate.now())) {
+				break;
+			}
 			nextStock = getNextStock(currentDate, amParam);
 
 			if (openTransaction != null && !openTransaction.stock.code.equals(nextStock.code)) {

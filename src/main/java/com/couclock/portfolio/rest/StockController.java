@@ -1,10 +1,12 @@
 package com.couclock.portfolio.rest;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -115,6 +117,15 @@ public class StockController {
 
 	}
 
+	@RequestMapping("/{stockCode}/graph-history/{startMoney}/{startDate}")
+	public List<List<Number>> getOneHistory(@PathVariable(value = "stockCode") String stockCode,
+			@PathVariable(value = "startMoney") double startMoney,
+			@PathVariable(value = "startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate) {
+
+		return stockHistoryService.getHistoryForGraph(stockCode, startMoney, startDate);
+
+	}
+
 	@RequestMapping("/{stockCode}/history/last")
 	public StockHistory getOneLastHistory(@PathVariable(value = "stockCode") String stockCode) {
 
@@ -184,7 +195,7 @@ public class StockController {
 				.collect(Collectors.toList());
 
 	}
-	
+
 	@RequestMapping(method = RequestMethod.POST, value = "/refresh")
 	public List<LightStockDTO> refreshAll() throws IOException {
 

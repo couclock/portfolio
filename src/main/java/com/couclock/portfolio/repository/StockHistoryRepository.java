@@ -17,6 +17,8 @@ public interface StockHistoryRepository extends JpaRepository<StockHistory, Long
 
 	List<StockHistory> findByStock_CodeOrderByDateAsc(String code);
 
+	List<StockHistory> findByStock_CodeAndDateAfterOrderByDateAsc(String code, LocalDate startDate);
+
 	List<StockHistory> findByStock_CodeOrderByDateDesc(String code);
 
 	StockHistory findTop1ByStock_CodeOrderByDateDesc(String code);
