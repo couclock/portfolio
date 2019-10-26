@@ -2,7 +2,7 @@
 <template>
   <v-card>
     <v-card-title>
-      Paramètres&nbsp;&nbsp;
+      Paramètres du backtest &nbsp;&nbsp;
       <v-icon
         class="mr-2"
         @click="$router.push({name:'backtest-settings-update', params:{id:backtest.id}})"

@@ -57,9 +57,27 @@ public class BacktestService {
 
 	}
 
+	public Backtest updateBacktestLabel(long backtestId, String backtestLabel) throws Exception {
+
+		Optional<Backtest> check = backtestRepository.findById(backtestId);
+		if (!check.isPresent()) {
+			throw new EntityNotFoundException("Backtest " + backtestId + " not found !");
+		}
+
+		Backtest bt = check.get();
+		bt.label = backtestLabel;
+
+		bt = backtestRepository.save(bt);
+
+		return bt;
+
+	}
+
 	/**
-	 * Retourne l'historique du backtest sous la forme attendue par la lib de graph côté front (highcharts)
-	 * Format attendu : [[timestamp1, val1], [timestamp2, val2] ...]
+	 * Retourne l'historique du backtest sous la forme attendue par la lib de graph
+	 * côté front (highcharts) Format attendu : [[timestamp1, val1], [timestamp2,
+	 * val2] ...]
+	 * 
 	 * @param backtestId
 	 * @return
 	 */
@@ -71,19 +89,19 @@ public class BacktestService {
 		}
 
 		List<List<Number>> result = new ArrayList<>();
-		
+
 		Backtest bt = check.get();
 		List<BacktestTransaction> transactions = bt.transactions.stream() //
-				.sorted((t1, t2 )-> t1.buyDate.compareTo(t2.buyDate)) //
+				.sorted((t1, t2) -> t1.buyDate.compareTo(t2.buyDate)) //
 				.collect(Collectors.toList());
-		
+
 		Double currentValue = bt.startMoney;
 		Double cashMoney = bt.startMoney;
-		BacktestTransaction currentTx= null;
-				
+		BacktestTransaction currentTx = null;
+
 		LocalDate current = bt.startDate;
 		while (!current.isAfter(bt.endDate)) {
-			
+
 			if (currentTx != null) {
 				if (current.equals(currentTx.sellDate)) {
 					currentValue = cashMoney + currentTx.sellValue * currentTx.quantity;
@@ -91,19 +109,19 @@ public class BacktestService {
 				} else {
 					currentValue = cashMoney + getStockCloseValue(currentTx.stock, current) * currentTx.quantity;
 				}
-			} 
-			
+			}
+
 			Optional<BacktestTransaction> startingTx = getTransactionStartingAtDate(transactions, current);
 			if (startingTx.isPresent()) {
 				currentTx = startingTx.get();
 				cashMoney = cashMoney - currentTx.buyValue * currentTx.quantity;
 				currentValue = cashMoney + getStockCloseValue(currentTx.stock, current) * currentTx.quantity;
 			}
-			
-			result.add(Arrays.asList(current.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(), currentValue));
+
+			result.add(Arrays.asList(current.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+					currentValue));
 			current = current.plusDays(1);
 		}
-		
 
 		return result;
 
@@ -114,22 +132,23 @@ public class BacktestService {
 		if (stockHistory == null) {
 			return 0;
 		}
-		
+
 		return stockHistory.close;
 	}
-	
-	private Optional<BacktestTransaction> getTransactionStartingAtDate(List<BacktestTransaction> transactions, LocalDate date) {
+
+	private Optional<BacktestTransaction> getTransactionStartingAtDate(List<BacktestTransaction> transactions,
+			LocalDate date) {
 		Optional<BacktestTransaction> result = transactions.stream() //
 				.filter(oneTransaction -> {
 					if (date.equals(oneTransaction.buyDate)) {
 						return true;
-					}					
+					}
 					return false;
 				}).findFirst();
-		
-			return result;
+
+		return result;
 	}
-	
+
 	public Backtest resetBacktest(long backtestId) {
 
 		Optional<Backtest> check = backtestRepository.findById(backtestId);

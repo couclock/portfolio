@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.couclock.portfolio.dto.BacktestLabelDTO;
 import com.couclock.portfolio.entity.Backtest;
 import com.couclock.portfolio.entity.strategies.AcceleratedMomentumParameters;
 import com.couclock.portfolio.entity.strategies.StrategyParameters.STRATEGY;
@@ -64,12 +65,12 @@ public class BacktestController {
 		return null;
 
 	}
-	
+
 	@RequestMapping(value = "/{backtestId}/history", method = RequestMethod.GET)
 	public List<List<Number>> getBacktestHistory(@PathVariable(value = "backtestId") Long backtestId) throws Exception {
 
 		List<List<Number>> check = backtestService.getBacktestHistory(backtestId);
-		
+
 		return check;
 
 	}
@@ -105,6 +106,16 @@ public class BacktestController {
 		savedBacktest = backtestService.continueBacktest(savedBacktest.id);
 
 		return savedBacktest;
+
+	}
+
+	@RequestMapping(value = "/{backtestId}/label", method = RequestMethod.PUT)
+	public Backtest updateBacktestLabel(@PathVariable(value = "backtestId") Long backtestId,
+			@RequestBody BacktestLabelDTO backtestLabel) throws Exception {
+
+		Backtest updatedBacktest = backtestService.updateBacktestLabel(backtestId, backtestLabel.label);
+
+		return updatedBacktest;
 
 	}
 

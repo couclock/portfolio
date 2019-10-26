@@ -6,7 +6,22 @@
 
       <v-row>
         <v-col cols="4">
-          <BacktestMetadata v-if="backtest" :backtest="backtest"></BacktestMetadata>
+          <v-row v-if="backtest">
+            <v-card tile>
+              <v-card-text>
+                <v-text-field
+                  label="Libellé du backtest"
+                  outlined
+                  v-model="backtest.label"
+                  @change="updateLabel"
+                  @input="updateLabel"
+                ></v-text-field>
+              </v-card-text>
+            </v-card>
+          </v-row>
+          <v-row>
+            <BacktestMetadata v-if="backtest" :backtest="backtest"></BacktestMetadata>
+          </v-row>
         </v-col>
 
         <v-col cols="8">
@@ -32,8 +47,6 @@
 import BacktestMetadata from "@/components/BacktestMetadata";
 import BacktestResults from "@/components/BacktestResults";
 import BacktestTransactions from "@/components/BacktestTransactions";
-
-import { parseISO, getTime } from "date-fns";
 
 import { Chart } from "highcharts-vue";
 
@@ -68,6 +81,21 @@ export default {
   },
   computed: {},
   methods: {
+    updateLabel() {
+      this.axios
+        .put("/backtests/" + this.backtest.id + "/label", {
+          label: this.backtest.label
+        })
+        .then(response => {
+          // eslint-disable-next-line
+          console.log("ok : ", response);
+        })
+        .catch(err => {
+          // eslint-disable-next-line
+          console.log("ERROR : " + err);
+        })
+        .finally(() => {});
+    },
     getStockHistory(stockCode, startMoney, startDate, graphIdx) {
       this.axios
         .get(

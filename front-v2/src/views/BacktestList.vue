@@ -9,6 +9,8 @@
         :items-per-page="10"
         class="elevation-1"
       >
+        <template v-slot:item.endDate="{ item }">{{item.endDate | formatDate}}</template>
+        <template v-slot:item.cagr="{ item }">{{item.cagr * 100 | formatNb}}&nbsp;%</template>
         <template v-slot:item.action="{ item }">
           <v-icon
             small
@@ -41,6 +43,8 @@
 </template>
 
 <script>
+import { format, parseISO } from "date-fns";
+
 export default {
   name: "backtestList",
   data() {
@@ -51,7 +55,7 @@ export default {
           text: "Name",
           align: "left",
           sortable: true,
-          value: "name"
+          value: "label"
         },
         { text: "Strategy", value: "strategyCode" },
         { text: "End date", value: "endDate" },
@@ -67,6 +71,13 @@ export default {
         return "";
       }
       value = Math.round(value * 100) / 100;
+      return value;
+    },
+    formatDate: function(value) {
+      if (!value) {
+        return "";
+      }
+      value = format(parseISO(value), "dd/MM/yyyy");
       return value;
     }
   },

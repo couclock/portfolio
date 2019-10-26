@@ -29,6 +29,7 @@ public class Backtest implements Serializable {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	public long id;
 
+	public String label;
 	public double startMoney;
 	public double currentMoney;
 	public double estimatedValue;
