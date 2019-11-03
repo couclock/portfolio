@@ -49,4 +49,22 @@ public class Backtest implements Serializable {
 	@Convert(converter = StrategyParametersConverter.class)
 	public StrategyParameters strategyParameters;
 
+	public boolean requireReset(Backtest newBacktest) {
+
+		if (!this.startDate.equals(newBacktest.startDate)) {
+			return true;
+		}
+		if (this.startMoney != newBacktest.startMoney) {
+			return true;
+		}
+		if (!this.strategyCode.equals(newBacktest.strategyCode)) {
+			return true;
+		}
+		if (!this.strategyParameters.equals(newBacktest.strategyParameters)) {
+			return true;
+		}
+
+		return false;
+	}
+
 }

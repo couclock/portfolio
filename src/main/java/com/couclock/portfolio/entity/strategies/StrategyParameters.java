@@ -26,4 +26,6 @@ public abstract class StrategyParameters {
 
 	}
 
+	public abstract boolean equals(StrategyParameters otherParameters);
+
 }

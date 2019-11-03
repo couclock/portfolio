@@ -101,7 +101,7 @@ public class BacktestController {
 	public Backtest upsert(@RequestBody Backtest backtest) throws Exception {
 		Backtest savedBacktest = null;
 
-		savedBacktest = backtestService.upsert(backtest);
+		savedBacktest = backtestService.checkAndUpsert(backtest);
 
 		savedBacktest = backtestService.continueBacktest(savedBacktest.id);
 

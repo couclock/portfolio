@@ -98,9 +98,11 @@ public class BacktestService {
 		Double currentValue = bt.startMoney;
 		Double cashMoney = bt.startMoney;
 		BacktestTransaction currentTx = null;
+		boolean sendDayValue = true;
 
 		LocalDate current = bt.startDate;
 		while (!current.isAfter(bt.endDate)) {
+			sendDayValue = true;
 
 			if (currentTx != null) {
 				if (current.equals(currentTx.sellDate)) {
@@ -108,6 +110,7 @@ public class BacktestService {
 					cashMoney = currentValue;
 				} else {
 					currentValue = cashMoney + getStockCloseValue(currentTx.stock, current) * currentTx.quantity;
+					sendDayValue = !currentValue.equals(cashMoney);
 				}
 			}
 
@@ -116,10 +119,13 @@ public class BacktestService {
 				currentTx = startingTx.get();
 				cashMoney = cashMoney - currentTx.buyValue * currentTx.quantity;
 				currentValue = cashMoney + getStockCloseValue(currentTx.stock, current) * currentTx.quantity;
+				sendDayValue = !currentValue.equals(cashMoney);
 			}
 
-			result.add(Arrays.asList(current.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-					currentValue));
+			if (sendDayValue) {
+				result.add(Arrays.asList(current.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+						currentValue));
+			}
 			current = current.plusDays(1);
 		}
 
@@ -159,9 +165,10 @@ public class BacktestService {
 		Backtest bt = check.get();
 		bt.endDate = null;
 		bt.currentMoney = bt.startMoney;
+		bt.estimatedValue = bt.startMoney;
 		bt.transactions = new ArrayList<>();
 
-		backtestRepository.save(bt);
+		bt = backtestRepository.save(bt);
 
 		return bt;
 
@@ -169,9 +176,55 @@ public class BacktestService {
 
 	public Backtest upsert(Backtest backtest) throws Exception {
 
-		backtestRepository.save(backtest);
+		Backtest result = null;
 
-		return backtest;
+		// Create
+		if (backtest.id == 0 && backtest.label == null) {
+			result = backtestRepository.save(backtest);
+		} else {
+			// Update
+			Optional<Backtest> check = backtestRepository.findById(backtest.id);
+			if (!check.isPresent()) {
+				throw new EntityNotFoundException("Backtest " + backtest.id + " not found !");
+			}
+			result = check.get();
+
+			result.startMoney = backtest.startMoney;
+			result.startDate = backtest.startDate;
+			result.strategyCode = backtest.strategyCode;
+			result.strategyParameters = backtest.strategyParameters;
+			result = backtestRepository.save(result);
+
+		}
+
+		return result;
+
+	}
+
+	public Backtest checkAndUpsert(Backtest backtest) throws Exception {
+
+		Backtest result = null;
+
+		// Create
+		if (backtest.id == 0 && backtest.label == null) {
+			result = upsert(backtest);
+		} else {
+			// Update
+			Optional<Backtest> check = backtestRepository.findById(backtest.id);
+			if (!check.isPresent()) {
+				throw new EntityNotFoundException("Backtest " + backtest.id + " not found !");
+			}
+			result = check.get();
+
+			// If one parameters changed, we reset transactions
+			if (result.requireReset(backtest)) {
+				result = resetBacktest(backtest.id);
+			}
+			result = upsert(backtest);
+
+		}
+
+		return result;
 
 	}
 

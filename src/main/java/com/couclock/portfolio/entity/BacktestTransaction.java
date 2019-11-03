@@ -22,7 +22,12 @@ public class BacktestTransaction implements Serializable {
 
 	@OneToOne
 	public FinStock stock;
-
 	public int quantity;
+
+	@Override
+	public String toString() {
+		return "BacktestTransaction [buyDate=" + buyDate + ", buyValue=" + buyValue + ", sellDate=" + sellDate
+				+ ", sellValue=" + sellValue + ", stock=" + stock.code + ", quantity=" + quantity + "]";
+	}
 
 }
